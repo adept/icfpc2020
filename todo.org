@@ -1,0 +1,15 @@
+* Inbox
+** TODO Rewrite sample app to use async, not Lwt
+* Notes
+** Building
+So, whenever we push to "submission" branch (or a branch called
+"submission/foo"), orgs will:
+
+- Clone our repo (branch submission).
+- Copy Dockerfile from their repo <-- THIS IS IMPORTANT, so we
+  effectively cant change the dockerfile
+
+- Run "docker build", which will effectively run build.sh, BUT WITHOUT
+  NETWORK, so we can't add/install packages on the fly
+
+- Run the image, which will run `run.sh`
