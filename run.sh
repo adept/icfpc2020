@@ -1,4 +1,4 @@
 #!/bin/sh
 
 eval "$(opam env)"
-app/app "$@" || echo "run error code: $?"
+app/_build/default/app/bin/main.exe "$@" || echo "run error code: $?"

@@ -3,7 +3,9 @@ open Cohttp
 open Cohttp_lwt_unix
 open Printf
 
-let () =
+let something_to_test = "it works!"
+
+let run () =
   assert (Array.length Sys.argv = 3);
   let server_url = Sys.argv.(1) in
   let player_key = Sys.argv.(2) in
