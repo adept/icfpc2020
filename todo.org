@@ -1,5 +1,6 @@
 * Inbox
-** TODO Rewrite sample app to use async, not Lwt
+** TODO Rewrite sample app to use async, not Lwt?
+Maybe not - see https://github.com/icfpcontest2020/dockerfiles/pull/76
 * Notes
 ** Building
 So, whenever we push to "submission" branch (or a branch called
