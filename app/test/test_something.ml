@@ -1,5 +1,4 @@
-open! Base
-open! Stdio
+open! Core
 
 let%test _ = String.equal Icfpc2020.Commands.something_to_test "it works!"
 

@@ -1,9 +1,8 @@
 (library
  (name icfpc2020_test)
  (libraries
-  base
+  core
   icfpc2020
-  stdio
   )
  (inline_tests)
  (preprocess (
