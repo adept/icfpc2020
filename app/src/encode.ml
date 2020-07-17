@@ -109,3 +109,9 @@ let rec decode = function
     Or_error.try_with (fun () ->
         Number (sign * int_of_string ("0b" ^ value_str)), leftover)
 ;;
+
+let rec to_string_mach = function
+  | Number int -> Int.to_string int
+  | Nil -> "nil"
+  | Cons (x, y) -> "ap ap cons " ^ to_string_mach x ^ " " ^ to_string_mach y
+;;

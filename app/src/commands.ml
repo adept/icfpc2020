@@ -49,5 +49,20 @@ let commands =
           (let%map_open server_url = anon ("SERVER-URL" %: string)
            and player_key = anon ("PLAYER-KEY" %: string) in
            fun () -> run ~server_url ~player_key) )
+    ; ( "decode"
+      , Command.basic
+          ~summary:"Decode the given string"
+          (let%map_open str = anon ("STR" %: string)
+           and mach =
+             flag "-mach" no_arg ~doc:" Output in their machine readable format"
+           in
+           fun () ->
+             match Encode.decode str with
+             | Error err -> eprintf "Error: %s" (Error.to_string_hum err)
+             | Ok (result, leftover) ->
+               if mach
+               then print_endline (Encode.to_string_mach result)
+               else print_s (Encode.sexp_of_t result);
+               printf "Leftover: '%s'\n" leftover) )
     ]
 ;;
