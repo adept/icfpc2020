@@ -1,5 +1,4 @@
 open! Core
-module Lambda = Lambda_vendor
 
 type t = Lambda.L.term =
   | Var of string

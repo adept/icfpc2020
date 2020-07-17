@@ -1,5 +1,5 @@
 (library
- (name lambda_vendor)
+ (name lambda)
  (modules ("bool" "church" "l" "parse" "parser" "lexer")))
 
 (executable

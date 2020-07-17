@@ -3,7 +3,7 @@
  (libraries
   core
   icfpc2020
-  lambda_vendor
+  lambda
   )
  (inline_tests)
  (preprocess (
