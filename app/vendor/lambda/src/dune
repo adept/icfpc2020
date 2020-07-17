@@ -1,0 +1,16 @@
+(library
+ (name lambda_vendor)
+ (modules ("bool" "church" "l" "parse" "parser" "lexer")))
+
+(executable
+ (name interp)
+ (libraries lambda)
+ (modules ("interp")))
+
+(ocamllex lexer)
+
+(menhir (modules parser))
+
+(env
+  (dev
+    (flags (:standard -warn-error -A))))
