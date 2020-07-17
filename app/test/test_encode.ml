@@ -1,16 +1,28 @@
 open! Core
 open! Icfpc2020
 
-let%expect_test "encode 0" =
+let%expect_test "encode numbers" =
   let open Encode in
-  print_endline (encode 0);
+  print_endline (encode (Number 0));
   [%expect {|010|}];
-  print_endline (encode 1);
+  print_endline (encode (Number 1));
   [%expect {|01100001|}];
-  print_endline (encode 16);
+  print_endline (encode (Number 16));
   [%expect {|0111000010000|}];
-  print_endline (encode 256);
+  print_endline (encode (Number 256));
   [%expect {|011110000100000000|}]
+;;
+
+let%expect_test "encode lists" =
+  let open Encode in
+  print_endline (encode Nil);
+  [%expect {|00|}];
+  print_endline (encode (Cons (Nil, Nil)));
+  [%expect {|110000|}];
+  print_endline (encode (Cons (Number 0, Nil)));
+  [%expect {|1101000|}];
+  print_endline (encode (Cons (Number 1, Number 2)));
+  [%expect {|110110000101100010|}]
 ;;
 
 let test str =

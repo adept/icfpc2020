@@ -6,5 +6,5 @@ type t =
   | Nil
 [@@deriving sexp]
 
-val encode : int -> string
+val encode : t -> string
 val decode : string -> t Or_error.t

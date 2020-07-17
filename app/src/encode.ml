@@ -43,7 +43,7 @@ type t =
   | Nil
 [@@deriving sexp]
 
-let encode n =
+let encode_int n =
   let pos_neg = if n >= 0 then "01" else "10" in
   let rec bits x acc =
     if x = 0
@@ -61,6 +61,12 @@ let encode n =
   let four_bit_blocks = String.length bits / 4 in
   let len = if n = 0 then "0" else String.make four_bit_blocks '1' ^ "0" in
   pos_neg ^ len ^ bits
+;;
+
+let rec encode = function
+  | Number x -> encode_int x
+  | Cons (a, b) -> "11" ^ encode a ^ encode b
+  | Nil -> "00"
 ;;
 
 let decode = function
