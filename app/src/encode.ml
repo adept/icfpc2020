@@ -43,8 +43,6 @@ type t =
   | Nil
 [@@deriving sexp]
 
-(* let nth_bit x n = x land (1 lsl n) <> 0 *)
-
 let encode n =
   let pos_neg = if n >= 0 then "01" else "10" in
   let rec bits x acc =
