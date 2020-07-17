@@ -1,13 +1,16 @@
 open! Core
 
-(*
-Bits 0..1 define a positive or negative number (and signal width) via a high/low or low/high signal change:
+(* Bits 0..1 define a positive or negative number (and signal width) via a
+   high/low or low/high signal change:
 
 01: positive number
 
 10: negative number
 
-Bits 2..(n+2) define the width of the following binary-encoded number via a unary-encoded number of length n composed of high signals ending with a low signal. The number width (in bits) is four times the unary encoding (i.e. 4 * n):
+Bits 2..(n+2) define the width of the following binary-encoded number via a
+   unary-encoded number of length n composed of high signals ending with a low
+   signal. The number width (in bits) is four times the unary encoding (i.e. 4 *
+   n):
 
 0: 0 [i.e. the number zero]
 
@@ -19,7 +22,9 @@ Bits 2..(n+2) define the width of the following binary-encoded number via a unar
 
 …
 
-The remaining bits, i.e. (n + 3)..(n + 3 + 4*n - 1), determine the number itself, in most-significant-bit first binary notation. Using the examples from this message:
+The remaining bits, i.e. (n + 3)..(n + 3 + 4*n - 1), determine the number
+   itself, in most-significant-bit first binary notation. Using the examples
+   from this message:
 
 0001: 1
 
@@ -29,12 +34,13 @@ The remaining bits, i.e. (n + 3)..(n + 3 + 4*n - 1), determine the number itself
 
 …
 
-With this encoding, the number zero only requires three bits (i.e. 010), but arbitrarily large numbers can also be represented.
- *)
+With this encoding, the number zero only requires three bits (i.e. 010), but
+   arbitrarily large numbers can also be represented. *)
 
 type t =
   | Number of int
-  | List of t list
+  | Cons of (t * t)
+  | Nil
 [@@deriving sexp]
 
 (* let nth_bit x n = x land (1 lsl n) <> 0 *)

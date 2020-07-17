@@ -43,3 +43,22 @@ let%expect_test "single numbers" =
   test "101110000100000000";
   [%expect {| (Number -256) |}]
 ;;
+
+(* let%expect_test "lists" =
+ *   test "11";
+ *   [%expect {| Nil |}];
+ *   test "110000";
+ *   [%expect {| Cons (Nil, Nil)|}];
+ *   test "1101000";
+ *   [%expect {| Cons (Number 0, Nil)|}];
+ *   test "110110000101100010";
+ *   [%expect {| Cons (Number 1, Number 2)|}];
+ *   test "1101100001110110001000";
+ *   [%expect {| Cons (Number 1, Cons (Number 2, Nil))|}];
+ *   test "1101100001110110001000";
+ *   (\* I don't know if the below is right *\)
+ *   [%expect {| Cons (Number 1, Number 2)|}];
+ *   test "1101100001111101100010110110001100110110010000";
+ *   (\* I don't know if the below is right *\)
+ *   [%expect {| Cons (Number 1, Cons (Cons (Number 2, Number 3), Number 4))|}]
+ * ;; *)

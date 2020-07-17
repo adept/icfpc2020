@@ -2,7 +2,8 @@ open! Core
 
 type t =
   | Number of int
-  | List of t list
+  | Cons of (t * t)
+  | Nil
 [@@deriving sexp]
 
 val encode : int -> string
