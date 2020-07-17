@@ -75,12 +75,15 @@ let defs =
   (* B x y z = x (y z)) *)
   |> Map.set ~key:"b" ~data:(Lambda.Parse.parse "(/x./y./z.x (y z))")
   (*cons: λh.λt.(λs.s h t) *)
-  |> Map.set ~key:"cons" ~data:(Lambda.Parse.parse "(/h./t.(/s.s h t))")
+  |> Map.set ~key:"cons" ~data:(Lambda.Parse.parse "(/h./t.(/m.m h t))")
   |> Map.set ~key:"car" ~data:(Lambda.Parse.parse "(/z.(z (/p./q.p)))")
   |> Map.set ~key:"cdr" ~data:(Lambda.Parse.parse "(/z.(z (/p./q.q)))")
+  |> Map.set ~key:"nil" ~data:(Lambda.Parse.parse "(/z.t)")
   (* Sxyz = xz(yz) *)
   |> Map.set ~key:"s" ~data:(Lambda.Parse.parse "(/x./y./z.x z (y z))")
   |> Map.set ~key:"i" ~data:(Lambda.Parse.parse "(/x.x)")
+  |> Map.set ~key:"t" ~data:Lambda.Bool.ltrue
+  |> Map.set ~key:"f" ~data:Lambda.Bool.lfalse
 ;;
 
 let is_int str =
@@ -112,7 +115,8 @@ let reduce t =
       if String.equal arg1 arg2 then Var "t" else Var "f"
     | App (App (Var "lt", Var x), Var y) when is_int x && is_int y ->
       if Int.( < ) (Int.of_string x) (Int.of_string y) then Var "t" else Var "f"
-    | App (Var "isnil", Var "nil") -> Var "t"
+    | App (Var "isnil", Abs (_, x)) ->
+      if Lambda.Bool.is_bool x && Lambda.Bool.to_bool x then Var "t" else Var "f"
     | App (Var "isnil", _) -> Var "f"
     | App (arg1, arg2) -> App (loop arg1, loop arg2)
     | t -> t
@@ -274,10 +278,13 @@ let%expect_test "eval" =
     c := \x -> \y -> \z -> ap (ap "x" "z") "y"
     car := \z -> ap "z" (\p -> \q -> "p")
     cdr := \z -> ap "z" (\p -> \q -> "q")
-    cons := \h -> \t -> \s -> ap (ap "s" "h") "t"
+    cons := \h -> \t -> \m -> ap (ap "m" "h") "t"
+    f := \x -> \y -> "y"
     i := \x -> "x"
+    nil := \z -> "t"
     s := \x -> \y -> \z -> ap (ap "x" "z") (ap "y" "z")
     statelessdraw := ap (ap "c" (ap (ap "b" "b") (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))))) (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")
+    t := \x -> \y -> "x"
     Eval: ap (ap (ap "c" "x") "y") (ap (ap "add" "1") "2")
     Free vars: (c x y add 1 2)
     Substituting c => (Abs (x (Abs (y (Abs (z (App (App (Var x) (Var z)) (Var y))))))))
@@ -301,7 +308,10 @@ let%expect_test "eval" =
     Free vars: (0 b c cons nil x0 x1)
     Substituting b => (Abs (x (Abs (y (Abs (z (App (Var x) (App (Var y) (Var z)))))))))
     Substituting c => (Abs (x (Abs (y (Abs (z (App (App (Var x) (Var z)) (Var y))))))))
-    Substituting cons => (Abs (h (Abs (t (Abs (s (App (App (Var s) (Var h)) (Var t))))))))
-    Free vars: (0 nil x0 x1)
-    Result: \s -> ap (ap "s" "0") (\s -> ap (ap "s" "x0") (\s -> ap (ap "s" (\s -> ap (ap "s" (\s -> ap (ap "s" "x1") "nil")) "nil")) "nil")) |}]
+    Substituting cons => (Abs (h (Abs (t (Abs (m (App (App (Var m) (Var h)) (Var t))))))))
+    Substituting nil => (Abs (z (Var t)))
+    Free vars: (0 t x0 x1)
+    Substituting t => (Abs (x (Abs (y (Var x)))))
+    Free vars: (0 x0 x1)
+    Result: \m -> ap (ap "m" "0") (\x -> \y -> "x") |}]
 ;;
