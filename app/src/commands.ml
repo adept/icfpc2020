@@ -6,6 +6,7 @@ open Cohttp_lwt_unix
 let something_to_test = "it works!"
 
 let send_post str ~server_url =
+  printf "POSTing to server %s\n" str;
   Client.post
     ~body:(Cohttp_lwt.Body.of_string str)
     ~headers:
@@ -30,7 +31,8 @@ let run ~server_url ~player_key =
   Lwt_main.run
     ( send_post player_key ~server_url >>= response_ok_exn >>= fun body ->
       printf "Server response 1: %s\n" body;
-      send_post player_key ~server_url >>= response_ok_exn >>= fun body ->
+      send_post (player_key ^ player_key) ~server_url >>= response_ok_exn
+      >>= fun body ->
       printf "Server response 2: %s\n" body;
       return () )
 ;;
