@@ -74,7 +74,7 @@ let defs =
   (* B x y z = x (y z)) *)
   |> Map.set ~key:"b" ~data:(Lambda.Parse.parse "(/x./y./z.x (y z))")
   (*cons: λh.λt.(λs.s h t) *)
-  |> Map.set ~key:"cons" ~data:(Lambda.Parse.parse "(λh.λt.(λs.s h t))")
+  (* |> Map.set ~key:"cons" ~data:(Lambda.Parse.parse "(/h./t.(/s.s h t))") *)
   (* Sxyz = xz(yz) *)
   |> Map.set ~key:"s" ~data:(Lambda.Parse.parse "(/x./y./z.x z (y z))")
 ;;
@@ -270,16 +270,35 @@ let%expect_test "eval" =
     printf "Result: %s\n" (to_string_hum res)
   in
   test "ap ap ap c x y ap ap add 1 2";
-  [%expect {||}];
+  [%expect {|
+    Defs:
+    b := \x -> \y -> \z -> ap "x" (ap "y" "z")
+    c := \x -> \y -> \z -> ap (ap "x" "z") "y"
+    s := \x -> \y -> \z -> ap (ap "x" "z") (ap "y" "z")
+    statelessdraw := ap (ap "c" (ap (ap "b" "b") (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))))) (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")
+    Eval: ap (ap (ap "c" "x") "y") (ap (ap "add" "1") "2")
+    Free vars: (c x y add 1 2)
+    Substituting c => (Abs (x (Abs (y (Abs (z (App (App (Var x) (Var z)) (Var y))))))))
+    Free vars: (x y add 1 2)
+    Result: ap (ap "x" "3") "y" |}];
   test "ap ap statelessdraw x0 x1";
   [%expect
     {|
-    Defs:
-    statelessdraw := ap (ap "c" (ap (ap "b" "b") (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))))) (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")
     Eval: ap (ap "statelessdraw" "x0") "x1"
-    Eval: "x1"
-    Eval: ap "statelessdraw" "x0"
-    Eval: "x0"
-    Eval: "statelessdraw"
+    Free vars: (statelessdraw x0 x1)
+    Substituting statelessdraw => (App
+     (App (Var c)
+      (App (App (Var b) (Var b))
+       (App (App (Var b) (App (Var b) (App (Var cons) (Var 0))))
+        (App (App (Var c) (App (App (Var b) (Var b)) (Var cons)))
+         (App (App (Var c) (Var cons)) (Var nil))))))
+     (App
+      (App (Var c)
+       (App (App (Var b) (Var cons)) (App (App (Var c) (Var cons)) (Var nil))))
+      (Var nil)))
+    Free vars: (0 b c cons nil x0 x1)
+    Substituting b => (Abs (x (Abs (y (Abs (z (App (Var x) (App (Var y) (Var z)))))))))
+    Substituting c => (Abs (x (Abs (y (Abs (z (App (App (Var x) (Var z)) (Var y))))))))
+    Free vars: (0 cons nil x0 x1)
     Result: ap (ap "cons" "0") (ap (ap "cons" "x0") (ap (ap "cons" (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")) "nil")) |}]
 ;;
