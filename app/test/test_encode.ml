@@ -71,6 +71,8 @@ let%expect_test "lists" =
   [%expect {| (Cons ((Number 1) (Cons ((Number 2) Nil))))|}];
   test "1101100001110110001000";
   [%expect {| (Cons ((Number 1) (Cons ((Number 2) Nil))))|}];
+  test "110110000101100010";
+  [%expect {| (Cons ((Number 1) (Number 2))) |}];
   test "1101100001111101100010110110001100110110010000";
   [%expect
     {|
