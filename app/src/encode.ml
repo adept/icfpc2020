@@ -69,8 +69,14 @@ let rec encode = function
   | Nil -> "00"
 ;;
 
-let decode = function
-  | "010" -> Ok (Number 0)
+let rec decode = function
+  | str when String.is_prefix str ~prefix:"00" -> Ok (Nil, String.slice str 2 0)
+  | str when String.is_prefix str ~prefix:"11" ->
+    let open Or_error.Let_syntax in
+    let%bind car, leftover = decode (String.slice str 2 0) in
+    let%bind cdr, leftover = decode leftover in
+    Ok (Cons (car, cdr), leftover)
+  | "010" -> Ok (Number 0, "")
   | str ->
     let open Or_error.Let_syntax in
     let%bind () =
@@ -98,14 +104,8 @@ let decode = function
       | None -> Or_error.errorf "Invalid quad spec: '%s'" str
       | Some (quads, rest) -> Ok (String.length quads, rest)
     in
-    let%bind () =
-      if quads * 4 <> String.length str
-      then
-        Or_error.errorf
-          "Wrong length for quads section: '%s' (expected %d)"
-          str
-          (quads * 4)
-      else Ok ()
-    in
-    Or_error.try_with (fun () -> Number (sign * int_of_string ("0b" ^ str)))
+    let value_str = String.slice str 0 (quads * 4) in
+    let leftover = String.slice str (quads * 4) 0 in
+    Or_error.try_with (fun () ->
+        Number (sign * int_of_string ("0b" ^ value_str)), leftover)
 ;;
