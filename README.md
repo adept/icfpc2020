@@ -6,7 +6,8 @@
 * [Discord chat](https://discord.com/invite/xvMJbas)
 * [Twitter](https://twitter.com/icfpcontest2020)
 * [Backstory](https://pegovka.space/)
-* [The docs???](https://message-from-space.readthedocs.io/en/latest/)
+* [Docs](https://message-from-space.readthedocs.io/en/latest/)
+* [Docs repo](https://github.com/zaitsev85/message-from-space)
 * [Backstory Twitter](https://twitter.com/ivanzaitsev85)
 
 ## Build setup
