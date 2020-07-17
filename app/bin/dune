@@ -1,6 +1,7 @@
 (executable
  (name main)
  (libraries
+  core
   icfpc2020
   )
  )

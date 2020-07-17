@@ -1,5 +1,11 @@
 (library
  (name icfpc2020)
  (libraries
-  cohttp-lwt-unix)
+  core
+  cohttp-lwt-unix
+  )
+ (preprocess (
+              pps
+              ppx_let
+              ))
  )
