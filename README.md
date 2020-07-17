@@ -6,6 +6,7 @@
 * [Discord chat](https://discord.com/invite/xvMJbas)
 * [Twitter](https://twitter.com/icfpcontest2020)
 * [Backstory](https://pegovka.space/)
+* [Ocaml base dockerfile](https://github.com/icfpcontest2020/dockerfiles/blob/master/dockerfiles/ocaml/Dockerfile.base)
 * [Docs](https://message-from-space.readthedocs.io/en/latest/)
 * [Docs repo](https://github.com/zaitsev85/message-from-space)
 * [Backstory Twitter](https://twitter.com/ivanzaitsev85)
