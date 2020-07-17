@@ -274,6 +274,7 @@ let%expect_test "eval" =
     car := \z -> ap "z" (\p -> \q -> "p")
     cdr := \z -> ap "z" (\p -> \q -> "q")
     cons := \h -> \t -> \s -> ap (ap "s" "h") "t"
+    i := \x -> "x"
     s := \x -> \y -> \z -> ap (ap "x" "z") (ap "y" "z")
     statelessdraw := ap (ap "c" (ap (ap "b" "b") (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))))) (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")
     Eval: ap (ap (ap "c" "x") "y") (ap (ap "add" "1") "2")
