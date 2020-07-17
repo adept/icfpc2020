@@ -3,8 +3,6 @@ open Lwt
 open Cohttp
 open Cohttp_lwt_unix
 
-let something_to_test = "it works!"
-
 let send_post str ~server_url =
   printf "POSTing to server %s\n" str;
   Client.post
