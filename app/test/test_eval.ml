@@ -79,6 +79,7 @@ let defs =
   |> Map.set ~key:"cdr" ~data:(Lambda.Parse.parse "(/z.(z (/p./q.q)))")
   (* Sxyz = xz(yz) *)
   |> Map.set ~key:"s" ~data:(Lambda.Parse.parse "(/x./y./z.x z (y z))")
+  |> Map.set ~key:"i" ~data:(Lambda.Parse.parse "(/x.x)")
 ;;
 
 let is_int str =
@@ -91,11 +92,6 @@ let is_int str =
 
 let reduce t =
   let rec loop = function
-    | App (App (App (Var "c", arg1), arg2), arg3) -> App (App (arg1, arg3), arg2)
-    | App (App (App (Var "b", arg1), arg2), arg3) -> App (arg1, App (arg2, arg3))
-    | App (App (App (Var "s", arg1), arg2), arg3) ->
-      App (App (arg1, arg3), App (arg2, arg3))
-    | App (Var "i", arg1) -> arg1
     | App (Var "inc", Var x) when is_int x -> Var (Int.to_string (Int.of_string x + 1))
     | App (Var "dec", Var x) when is_int x -> Var (Int.to_string (Int.of_string x - 1))
     | App (Var "inc", App (Var "dec", Var x)) -> Var x
