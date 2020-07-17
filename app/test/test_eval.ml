@@ -79,7 +79,6 @@ let defs =
   |> Map.set ~key:"s" ~data:(Lambda.Parse.parse "(/x./y./z.x z (y z))")
 ;;
 
-(*
 let is_int str =
   try
     let (_ : int) = Int.of_string str in
@@ -90,34 +89,35 @@ let is_int str =
 
 let reduce t =
   let rec loop = function
-    | App (Ap (Ap (Name "c", arg1), arg2), arg3) -> Ap (Ap (arg1, arg3), arg2)
-    | Ap (Ap (Ap (Name "b", arg1), arg2), arg3) -> Ap (arg1, Ap (arg2, arg3))
-    | Ap (Ap (Ap (Name "s", arg1), arg2), arg3) -> Ap (Ap (arg1, arg3), Ap (arg2, arg3))
-    | Ap (Name "i", arg1) -> arg1
-    | Ap (Name "inc", Name x) when is_int x -> Name (Int.to_string (Int.of_string x + 1))
-    | Ap (Name "dec", Name x) when is_int x -> Name (Int.to_string (Int.of_string x - 1))
-    | Ap (Name "inc", Ap (Name "dec", Name x)) -> Name x
-    | Ap (Name "dec", Ap (Name "inc", Name x)) -> Name x
-    | Ap (Ap (Name "add", Name x), Name y) when is_int x && is_int y ->
-      Name (Int.to_string (Int.of_string x + Int.of_string y))
-    | Ap (Name "car", Ap (Ap (Name "cons", arg1), _)) -> arg1
-    | Ap (Name "cdr", Ap (Ap (Name "cons", _), arg2)) -> arg2
-    | Ap (Ap (Name "div", Name x), Name y) when is_int x && is_int y ->
-      Name (Int.to_string (Int.of_string x / Int.of_string y))
-    | Ap (Ap (Name "div", Name x), Name "1") -> Name x
-    | Ap (Ap (Name "mul", Name x), Name y) when is_int x && is_int y ->
-      Name (Int.to_string (Int.of_string x * Int.of_string y))
-    | Ap (Ap (Name "mul", Name x), Name "1") -> Name x
-    | Ap (Ap (Name "mul", Name _), Name "0") -> Name "0"
-    | Ap (Name "neg", Name x) when is_int x ->
-      Name (Int.to_string (Int.neg (Int.of_string x)))
-    | Ap (Ap (Name "eq", Name arg1), Name arg2) ->
-      if String.equal arg1 arg2 then Name "t" else Name "f"
-    | Ap (Ap (Name "lt", Name x), Name y) when is_int x && is_int y ->
-      if Int.( < ) (Int.of_string x) (Int.of_string y) then Name "t" else Name "f"
-    | Ap (Name "isnil", Name "nil") -> Name "t"
-    | Ap (Name "isnil", _) -> Name "f"
-    | Ap (arg1, arg2) -> Ap (loop arg1, loop arg2)
+    | App (App (App (Var "c", arg1), arg2), arg3) -> App (App (arg1, arg3), arg2)
+    | App (App (App (Var "b", arg1), arg2), arg3) -> App (arg1, App (arg2, arg3))
+    | App (App (App (Var "s", arg1), arg2), arg3) ->
+      App (App (arg1, arg3), App (arg2, arg3))
+    | App (Var "i", arg1) -> arg1
+    | App (Var "inc", Var x) when is_int x -> Var (Int.to_string (Int.of_string x + 1))
+    | App (Var "dec", Var x) when is_int x -> Var (Int.to_string (Int.of_string x - 1))
+    | App (Var "inc", App (Var "dec", Var x)) -> Var x
+    | App (Var "dec", App (Var "inc", Var x)) -> Var x
+    | App (App (Var "add", Var x), Var y) when is_int x && is_int y ->
+      Var (Int.to_string (Int.of_string x + Int.of_string y))
+    | App (Var "car", App (App (Var "cons", arg1), _)) -> arg1
+    | App (Var "cdr", App (App (Var "cons", _), arg2)) -> arg2
+    | App (App (Var "div", Var x), Var y) when is_int x && is_int y ->
+      Var (Int.to_string (Int.of_string x / Int.of_string y))
+    | App (App (Var "div", Var x), Var "1") -> Var x
+    | App (App (Var "mul", Var x), Var y) when is_int x && is_int y ->
+      Var (Int.to_string (Int.of_string x * Int.of_string y))
+    | App (App (Var "mul", Var x), Var "1") -> Var x
+    | App (App (Var "mul", Var _), Var "0") -> Var "0"
+    | App (Var "neg", Var x) when is_int x ->
+      Var (Int.to_string (Int.neg (Int.of_string x)))
+    | App (App (Var "eq", Var arg1), Var arg2) ->
+      if String.equal arg1 arg2 then Var "t" else Var "f"
+    | App (App (Var "lt", Var x), Var y) when is_int x && is_int y ->
+      if Int.( < ) (Int.of_string x) (Int.of_string y) then Var "t" else Var "f"
+    | App (Var "isnil", Var "nil") -> Var "t"
+    | App (Var "isnil", _) -> Var "f"
+    | App (arg1, arg2) -> App (loop arg1, loop arg2)
     | t -> t
   in
   let rec outer_loop t =
@@ -129,33 +129,32 @@ let reduce t =
     eprint_s [%sexp "Exception while reducing", { t : t; exn : Exn.t }];
     raise exn
 ;;
- *)
 
-let rec subst_fix t ~defs =
+let rec subst_fix t ~verbose ~defs =
   let free_vars = Lambda.L.fv_l t in
-  printf !"Free vars: %{sexp: string list}\n" free_vars;
+  if verbose then printf !"Free vars: %{sexp: string list}\n" free_vars;
   let t' =
     List.fold free_vars ~init:t ~f:(fun acc free_var ->
         match Map.find defs free_var with
         | None -> acc
         | Some definition ->
-          printf !"Substituting %s => %{sexp: t}\n" free_var definition;
+          if verbose then printf !"Substituting %s => %{sexp: t}\n" free_var definition;
           Lambda.L.subst free_var definition acc)
   in
-  if Lambda.L.len t' > Lambda.L.len t then subst_fix t' ~defs else t'
+  if Lambda.L.len t' > Lambda.L.len t then subst_fix t' ~verbose ~defs else t'
 ;;
 
-let eval t ~defs =
-  printf "Eval: %s\n" (to_string_hum t);
-  let t = subst_fix ~defs t in
-  Lambda.L.reduce_fix t
+let eval t ~verbose ~defs =
+  if verbose then printf "Eval: %s\n" (to_string_hum t);
+  let t = subst_fix ~verbose ~defs t in
+  reduce (Lambda.L.reduce_fix t)
 ;;
 
 (*
 let rec eval t ~verbose ~defs =
   if verbose then printf "Eval: %s\n" (to_string_hum t);
   match t with
-  | Ap (arg1, arg2) -> reduce (Ap (eval arg1 ~verbose ~defs, eval arg2 ~verbose ~defs))
+  | App (arg1, arg2) -> reduce (App (eval arg1 ~verbose ~defs, eval arg2 ~verbose ~defs))
   | Name name ->
     (match Map.find defs name with
     | None -> Name name
