@@ -25,6 +25,14 @@ let response_ok_exn (resp, body) =
     exit 2
 ;;
 
+let decode_response_ok_exn (resp, body) =
+  response_ok_exn (resp, body)
+  >>= fun response ->
+  match Encode.decode response with
+  | Ok (res, _leftover) -> return res
+  | Error err -> failwithf !"Error decoding %s: %{Error#hum}" response err ()
+;;
+
 let run ~server_url ~player_key =
   printf "ServerUrl: %s; PlayerKey: %s\n" server_url player_key;
   Lwt_main.run
@@ -39,16 +47,46 @@ let run ~server_url ~player_key =
     return ())
 ;;
 
+let proxy_uri = "https://icfpc2020-api.testkontur.ru"
+
+let send_api ~player_key method_path payload =
+  let uri = sprintf "%s/%s?apiKey=%s" proxy_uri method_path player_key |> Uri.of_string in
+  printf "POSTing to server %s\n" payload;
+  Client.post
+    ~body:(Cohttp_lwt.Body.of_string payload)
+    ~headers:
+      (Cohttp.Header.of_list
+         [ "Content-Length", string_of_int (String.length payload)
+         ; "Content-Type", "text/plain"
+         ])
+    uri
+;;
+
+let ping ~player_key =
+  let open Encode in
+  Lwt_main.run
+    (send_api ~player_key "aliens/send" (encode (Cons (Number 0, Nil)))
+    >>= decode_response_ok_exn
+    >>= fun response ->
+    printf !"Server response: %{sexp: Encode.t}\n" response;
+    return ())
+;;
+
 let commands =
   let open Command.Let_syntax in
   Command.group
     ~summary:"Solution to ICFP Contest 2020"
-    [ ( "run"
+    [ ( "test"
       , Command.basic
-          ~summary:"Solve the problem"
+          ~summary:"Test the build"
           (let%map_open server_url = anon ("SERVER-URL" %: string)
            and player_key = anon ("PLAYER-KEY" %: string) in
            fun () -> run ~server_url ~player_key) )
+    ; ( "ping"
+      , Command.basic
+          ~summary:"Send ping to API server"
+          (let%map_open player_key = anon ("PLAYER-KEY" %: string) in
+           fun () -> ping ~player_key) )
     ; ( "decode"
       , Command.basic
           ~summary:"Decode the given string"

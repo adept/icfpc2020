@@ -9,5 +9,6 @@
    pps
    ppx_let
    ppx_sexp_conv
+   ppx_jane
    ))
  )
