@@ -5,4 +5,5 @@ type t =
   | List of t list
 [@@deriving sexp]
 
-val demod : string -> t Or_error.t
+val encode : int -> string
+val decode : string -> t Or_error.t

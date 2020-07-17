@@ -1,10 +1,22 @@
 open! Core
 open! Icfpc2020
 
+let%expect_test "encode 0" =
+  let open Encode in
+  print_endline (encode 0);
+  [%expect {|010|}];
+  print_endline (encode 1);
+  [%expect {|01100001|}];
+  print_endline (encode 16);
+  [%expect {|0111000010000|}];
+  print_endline (encode 256);
+  [%expect {|011110000100000000|}]
+;;
+
 let test str =
-  match Enc.demod str with
+  match Encode.decode str with
   | Error err -> print_endline (Error.to_string_hum err)
-  | Ok enc -> print_s (Enc.sexp_of_t enc)
+  | Ok enc -> print_s (Encode.sexp_of_t enc)
 ;;
 
 let%expect_test "single numbers" =

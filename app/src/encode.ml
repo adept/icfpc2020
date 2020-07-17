@@ -1,4 +1,4 @@
-open Core
+open! Core
 
 (*
 Bits 0..1 define a positive or negative number (and signal width) via a high/low or low/high signal change:
@@ -32,7 +32,12 @@ The remaining bits, i.e. (n + 3)..(n + 3 + 4*n - 1), determine the number itself
 With this encoding, the number zero only requires three bits (i.e. 010), but arbitrarily large numbers can also be represented.
  *)
 
-let nth_bit x n = x land (1 lsl n) <> 0
+type t =
+  | Number of int
+  | List of t list
+[@@deriving sexp]
+
+(* let nth_bit x n = x land (1 lsl n) <> 0 *)
 
 let encode n =
   let pos_neg = if n >= 0 then "01" else "10" in
@@ -54,13 +59,43 @@ let encode n =
   pos_neg ^ len ^ bits
 ;;
 
-let%expect_test "encode 0" =
-  print_endline (encode 0);
-  [%expect {|010|}];
-  print_endline (encode 1);
-  [%expect {|01100001|}];
-  print_endline (encode 16);
-  [%expect {|0111000010000|}];
-  print_endline (encode 256);
-  [%expect {|011110000100000000|}]
+let decode = function
+  | "010" -> Ok (Number 0)
+  | str ->
+    let open Or_error.Let_syntax in
+    let%bind () =
+      if String.length str < 3
+      then Or_error.errorf "String too short: '%s'" str
+      else Ok ()
+    in
+    let%bind () =
+      if String.for_all str ~f:(function
+             | '0' | '1' -> true
+             | _ -> false)
+      then Ok ()
+      else Or_error.errorf "String not binary: '%s'" str
+    in
+    let%bind sign =
+      if String.is_prefix str ~prefix:"01"
+      then Ok 1
+      else if String.is_prefix str ~prefix:"10"
+      then Ok ~-1
+      else Or_error.errorf "Unknown sign: '%s'" str
+    in
+    let str = String.slice str 2 0 in
+    let%bind quads, str =
+      match String.lsplit2 str ~on:'0' with
+      | None -> Or_error.errorf "Invalid quad spec: '%s'" str
+      | Some (quads, rest) -> Ok (String.length quads, rest)
+    in
+    let%bind () =
+      if quads * 4 <> String.length str
+      then
+        Or_error.errorf
+          "Wrong length for quads section: '%s' (expected %d)"
+          str
+          (quads * 4)
+      else Ok ()
+    in
+    Or_error.try_with (fun () -> Number (sign * int_of_string ("0b" ^ str)))
 ;;
