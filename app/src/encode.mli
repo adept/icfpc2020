@@ -7,4 +7,4 @@ type t =
 [@@deriving sexp]
 
 val encode : int -> string
-val decode : string -> t Or_error.t
+val decode : string -> (t * string) Or_error.t

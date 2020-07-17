@@ -16,7 +16,9 @@ let%expect_test "encode 0" =
 let test str =
   match Encode.decode str with
   | Error err -> print_endline (Error.to_string_hum err)
-  | Ok enc -> print_s (Encode.sexp_of_t enc)
+  | Ok (enc, leftover) ->
+    print_s (Encode.sexp_of_t enc);
+    if not (String.is_empty leftover) then printf "Leftover: '%s'" leftover
 ;;
 
 let%expect_test "single numbers" =
@@ -44,21 +46,24 @@ let%expect_test "single numbers" =
   [%expect {| (Number -256) |}]
 ;;
 
-(* let%expect_test "lists" =
- *   test "11";
- *   [%expect {| Nil |}];
- *   test "110000";
- *   [%expect {| Cons (Nil, Nil)|}];
- *   test "1101000";
- *   [%expect {| Cons (Number 0, Nil)|}];
- *   test "110110000101100010";
- *   [%expect {| Cons (Number 1, Number 2)|}];
- *   test "1101100001110110001000";
- *   [%expect {| Cons (Number 1, Cons (Number 2, Nil))|}];
- *   test "1101100001110110001000";
- *   (\* I don't know if the below is right *\)
- *   [%expect {| Cons (Number 1, Number 2)|}];
- *   test "1101100001111101100010110110001100110110010000";
- *   (\* I don't know if the below is right *\)
- *   [%expect {| Cons (Number 1, Cons (Cons (Number 2, Number 3), Number 4))|}]
- * ;; *)
+let%expect_test "lists" =
+  test "00";
+  [%expect {| Nil |}];
+  test "110000";
+  [%expect {| (Cons (Nil Nil))|}];
+  test "1101000";
+  [%expect {| (Cons ((Number 0) Nil))|}];
+  test "110110000101100010";
+  [%expect {| (Cons ((Number 1) (Number 2)))|}];
+  test "1101100001110110001000";
+  [%expect {| (Cons ((Number 1) (Cons ((Number 2) Nil))))|}];
+  test "1101100001110110001000";
+  [%expect {| (Cons ((Number 1) (Cons ((Number 2) Nil))))|}];
+  test "1101100001111101100010110110001100110110010000";
+  [%expect
+    {|
+    (Cons
+     ((Number 1)
+      (Cons
+       ((Cons ((Number 2) (Cons ((Number 3) Nil)))) (Cons ((Number 4) Nil))))))|}]
+;;
