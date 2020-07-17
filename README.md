@@ -3,6 +3,7 @@
 ## Useful links
 
 * [Competition website](https://icfpcontest2020.github.io/)
+* [API](https://icfpc2020-api.testkontur.ru/swagger/index.html)
 * [Discord chat](https://discord.com/invite/xvMJbas)
 * [Twitter](https://twitter.com/icfpcontest2020)
 * [Backstory](https://pegovka.space/)
