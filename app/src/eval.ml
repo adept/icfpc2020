@@ -1,24 +1,23 @@
 open! Core
 module Id = Unique_id.Int ()
 
-type t =
-  | Var of string
-  | Num of int
-  | Arg1 of string * t
-  | Arg2 of string * t * t
-  | App of t * t
-[@@deriving sexp]
+module T = struct
+  module U = struct
+    type t =
+      | Var of string
+      | Num of int
+      | Arg1 of string * t
+      | Arg2 of string * t * t
+      | App of t * t
+    [@@deriving compare, equal, hash, sexp]
+  end
 
-let rec equal t1 t2 =
-  match t1, t2 with
-  | Num n1, Num n2 -> n1 = n2
-  | Var n1, Var n2 -> String.equal n1 n2
-  | App (t11, t12), App (t21, t22) -> equal t11 t21 && equal t12 t22
-  | Arg1 (n1, x1), Arg1 (n2, y1) -> String.equal n1 n2 && equal x1 y1
-  | Arg2 (n1, x1, x2), Arg2 (n2, y1, y2) ->
-    String.equal n1 n2 && equal x1 y1 && equal x2 y2
-  | _, _ -> false
-;;
+  include U
+  include Comparable.Make (U)
+  include Hashable.Make (U)
+end
+
+include T.U
 
 let rec length = function
   | Num _ -> 1
@@ -145,16 +144,17 @@ let reduce_maximally t =
     | App (Var "neg", Num 0) -> Num 0
     | App (Var "neg", Num x) -> Num (Int.neg x)
     (* eq *)
-    | App (App (Var "eq", Num arg1), Num arg2) -> if arg1 = arg2 then Var "t" else Var "f"
+    | App (App (Var "eq", Num arg1), Num arg2) ->
+      if Int.equal arg1 arg2 then Var "t" else Var "f"
     | App (App (Var "eq", Var arg1), Var arg2) ->
       if String.equal arg1 arg2 then Var "t" else Var "f"
     (*lt*)
     | App (App (Var "lt", Num x), Num y) -> if Int.( < ) x y then Var "t" else Var "f"
     | App (Var "isnil", Var "nil") -> Var "t"
-    | App (Var "isnil", App (App (Var "cons", _), _)) -> Var "t"
+    | App (Var "isnil", App (App (Var "cons", _), _)) -> Var "f"
     | App (Var "isnil", Num _) -> Var "f"
     | App (App (App (Var "if0", Num x), then_branch), else_branch) ->
-      if x = 0 then then_branch else else_branch
+      if Int.equal x 0 then then_branch else else_branch
     (* B *)
     | App (Var "b", x) -> Arg1 ("b", x)
     | App (Arg1 ("b", x), y) -> Arg2 ("b", x, y)
@@ -203,7 +203,7 @@ let eval_custom ~verbose ~defs =
             | t2' when not (equal t2 t2') -> Arg2 (n, t1, t2')
             | _ -> t))
         | Var name ->
-          (match Map.find defs name with
+          (match String.Map.find defs name with
           | None -> t
           | Some expansion ->
             if verbose then printf !"Substituting %s\n" name;
@@ -221,13 +221,21 @@ let eval_custom ~verbose ~defs =
         let t' = reduce_maximally t in
         if equal t' t then t else reduce_fix t'
       in
+      let seen = T.Hash_set.create () in
       let rec loop t =
-        if verbose then printf "(length = %d) Eval_custom loop\n%!" (length t);
+        if Hash_set.mem seen t
+        then (
+          print_endline "LOOP!";
+          let (_ : string) = In_channel.input_line_exn In_channel.stdin in
+          ());
+        Hash_set.add seen t;
+        if verbose
+        then printf "(length = %d) Eval_custom loop (%d)\n%!" (length t) (T.hash t);
         let t' = expand_once t in
-        if verbose then printf !"Expanded:\n%{sexp: t}\n%!" t';
+        (* if verbose then printf !"Expanded:\n%{sexp: t}\n%!" t'; *)
         let t' = reduce_fix t' in
-        if verbose then printf !"Reduced:\n%{sexp: t}\n%!" t';
-        if verbose then printf !"Reduced hum:\n%s\n%!" (to_string_hum t');
+        (* if verbose then printf !"Reduced:\n%{sexp: t}\n%!" t';
+         * if verbose then printf !"Reduced hum:\n%s\n%!" (to_string_hum t'); *)
         if equal t' t
         then t
         else
