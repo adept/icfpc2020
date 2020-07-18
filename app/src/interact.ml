@@ -53,7 +53,7 @@ let rec interact ~protocol ~state ~vector ~eval =
     protocol
     state
     vector;
-  let res = eval Eval.(App (App (protocol, state), vector)) in
+  let res = eval Eval.(app (app protocol state) vector) in
   printf !"res = %{sexp:Eval.t}\n%!" res;
   let flag = Eval.car res in
   let newState = Eval.car (Eval.cdr res) in
@@ -88,6 +88,6 @@ let run ~filename ~protocol ~state ~vector =
   G.set_window_title "Messages From Space";
   let defs = Eval.load_defs_exn ~filename in
   let p str = Eval.parse_exn (String.split ~on:' ' str) in
-  let eval = Eval.eval_custom ~verbose:true ~defs |> Staged.unstage in
+  let eval = Eval.eval_custom ~verbose:false ~defs in
   interact ~protocol:(p protocol) ~state:(p state) ~vector:(p vector) ~eval
 ;;

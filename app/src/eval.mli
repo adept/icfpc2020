@@ -1,5 +1,4 @@
 open! Core
-module Id : Unique_id.Id
 
 module Big_int : sig
   open! Big_int_Z
@@ -11,6 +10,7 @@ module Big_int : sig
 end
 
 type t =
+<<<<<<< HEAD
   | Nil
   | True
   | False
@@ -19,6 +19,21 @@ type t =
   | App of t * t
 [@@deriving equal, sexp]
 
+=======
+  { mutable evaluated : t option
+  ; u : u
+  }
+
+and u =
+  | Var of string
+  | App of t * t
+[@@deriving sexp_of]
+
+val app : t -> t -> t
+val var : string -> t
+val car : t -> t
+val cdr : t -> t
+>>>>>>> a705148... Implement their evaluator; the tests don't pass because they don't have lots of special cases
 val to_string_hum : t -> string
 val load_defs_exn : filename:string -> t String.Map.t
 
@@ -37,4 +52,4 @@ val parse_def_exn : string -> string * t
 (** Evaluating *)
 
 val base_defs : t String.Map.t
-val eval_custom : verbose:bool -> defs:t String.Map.t -> (t -> t) Staged.t
+val eval_custom : t -> verbose:bool -> defs:t String.Map.t -> t
