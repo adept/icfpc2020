@@ -185,6 +185,7 @@ let%expect_test "base combinators" =
   test "ap isnil nil";
   test "ap isnil ap ap cons x0 x1";
   test "ap isnil ap car ap ap cons nil x0";
+  test "ap isnil ap car ap cdr ap ap cons x0 nil";
   test "ap ap lt 0 -1";
   test "ap ap lt 0 0";
   test "ap ap lt 0 1";
