@@ -29,7 +29,7 @@ let defs =
   |> List.map ~f:Eval.parse_def_exn
   |> List.fold_left ~init:Eval.base_defs ~f:(fun acc (key, data) ->
          Map.set acc ~key ~data)
-  |> Map.set ~key:"f2048" ~data:(Lambda.Parse.parse "(f f2048)")
+  |> Map.set ~key:"f2048" ~data:(Eval.App (Var "f", Var "f2048"))
 ;;
 
 let%expect_test "base combinators" =
@@ -433,198 +433,788 @@ let%expect_test "eval" =
   [%expect
     {|
     Eval (length: 3): ap "pwr2" "2"
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+    (length = 3) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App
+     (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+      (App (App (Var b) (App (Var mul) (Var 2)))
+       (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+     (Var 2))
+    Reduced:
+    (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 1)))
+    (length = 7) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App
+      (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+       (App (App (Var b) (App (Var mul) (Var 2)))
+        (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+      (Var 1)))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 0))))
+    (length = 11) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App
+       (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+        (App (App (Var b) (App (Var mul) (Var 2)))
+         (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+       (Var 0))))
+    Reduced:
+    (Var 4)
+    (length = 1) Eval_custom loop
+    Expanded:
+    (Var 4)
+    Reduced:
+    (Var 4)
     Result: "4" |}];
   test "ap pwr2 3";
   [%expect
     {|
     Eval (length: 3): ap "pwr2" "3"
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+    (length = 3) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App
+     (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+      (App (App (Var b) (App (Var mul) (Var 2)))
+       (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+     (Var 3))
+    Reduced:
+    (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 2)))
+    (length = 7) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App
+      (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+       (App (App (Var b) (App (Var mul) (Var 2)))
+        (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+      (Var 2)))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 1))))
+    (length = 11) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App
+       (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+        (App (App (Var b) (App (Var mul) (Var 2)))
+         (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+       (Var 1))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 0)))))
+    (length = 15) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App
+        (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+         (App (App (Var b) (App (Var mul) (Var 2)))
+          (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+        (Var 0)))))
+    Reduced:
+    (Var 8)
+    (length = 1) Eval_custom loop
+    Expanded:
+    (Var 8)
+    Reduced:
+    (Var 8)
     Result: "8" |}];
   test "ap pwr2 4";
   [%expect
     {|
     Eval (length: 3): ap "pwr2" "4"
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+    (length = 3) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App
+     (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+      (App (App (Var b) (App (Var mul) (Var 2)))
+       (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+     (Var 4))
+    Reduced:
+    (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 3)))
+    (length = 7) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App
+      (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+       (App (App (Var b) (App (Var mul) (Var 2)))
+        (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+      (Var 3)))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 2))))
+    (length = 11) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App
+       (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+        (App (App (Var b) (App (Var mul) (Var 2)))
+         (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+       (Var 2))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 1)))))
+    (length = 15) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App
+        (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+         (App (App (Var b) (App (Var mul) (Var 2)))
+          (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+        (Var 1)))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 0))))))
+    (length = 19) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App
+         (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+          (App (App (Var b) (App (Var mul) (Var 2)))
+           (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+         (Var 0))))))
+    Reduced:
+    (Var 16)
+    (length = 1) Eval_custom loop
+    Expanded:
+    (Var 16)
+    Reduced:
+    (Var 16)
     Result: "16" |}];
   test "ap pwr2 5";
   [%expect
     {|
     Eval (length: 3): ap "pwr2" "5"
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+    (length = 3) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App
+     (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+      (App (App (Var b) (App (Var mul) (Var 2)))
+       (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+     (Var 5))
+    Reduced:
+    (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 4)))
+    (length = 7) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App
+      (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+       (App (App (Var b) (App (Var mul) (Var 2)))
+        (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+      (Var 4)))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 3))))
+    (length = 11) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App
+       (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+        (App (App (Var b) (App (Var mul) (Var 2)))
+         (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+       (Var 3))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 2)))))
+    (length = 15) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App
+        (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+         (App (App (Var b) (App (Var mul) (Var 2)))
+          (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+        (Var 2)))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 1))))))
+    (length = 19) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App
+         (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+          (App (App (Var b) (App (Var mul) (Var 2)))
+           (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+         (Var 1))))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 0)))))))
+    (length = 23) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2))
+         (App
+          (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+           (App (App (Var b) (App (Var mul) (Var 2)))
+            (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+          (Var 0)))))))
+    Reduced:
+    (Var 32)
+    (length = 1) Eval_custom loop
+    Expanded:
+    (Var 32)
+    Reduced:
+    (Var 32)
     Result: "32" |}];
   test "ap pwr2 6";
   [%expect
     {|
     Eval (length: 3): ap "pwr2" "6"
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+    (length = 3) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App
+     (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+      (App (App (Var b) (App (Var mul) (Var 2)))
+       (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+     (Var 6))
+    Reduced:
+    (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 5)))
+    (length = 7) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App
+      (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+       (App (App (Var b) (App (Var mul) (Var 2)))
+        (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+      (Var 5)))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 4))))
+    (length = 11) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App
+       (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+        (App (App (Var b) (App (Var mul) (Var 2)))
+         (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+       (Var 4))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 3)))))
+    (length = 15) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App
+        (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+         (App (App (Var b) (App (Var mul) (Var 2)))
+          (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+        (Var 3)))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 2))))))
+    (length = 19) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App
+         (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+          (App (App (Var b) (App (Var mul) (Var 2)))
+           (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+         (Var 2))))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 1)))))))
+    (length = 23) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2))
+         (App
+          (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+           (App (App (Var b) (App (Var mul) (Var 2)))
+            (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+          (Var 1)))))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2))
+         (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 0))))))))
+    (length = 27) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2))
+         (App (App (Var mul) (Var 2))
+          (App
+           (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+            (App (App (Var b) (App (Var mul) (Var 2)))
+             (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+           (Var 0))))))))
+    Reduced:
+    (Var 64)
+    (length = 1) Eval_custom loop
+    Expanded:
+    (Var 64)
+    Reduced:
+    (Var 64)
     Result: "64" |}];
   test "ap pwr2 7";
   [%expect
     {|
     Eval (length: 3): ap "pwr2" "7"
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+    (length = 3) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App
+     (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+      (App (App (Var b) (App (Var mul) (Var 2)))
+       (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+     (Var 7))
+    Reduced:
+    (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 6)))
+    (length = 7) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App
+      (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+       (App (App (Var b) (App (Var mul) (Var 2)))
+        (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+      (Var 6)))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 5))))
+    (length = 11) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App
+       (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+        (App (App (Var b) (App (Var mul) (Var 2)))
+         (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+       (Var 5))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 4)))))
+    (length = 15) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App
+        (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+         (App (App (Var b) (App (Var mul) (Var 2)))
+          (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+        (Var 4)))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 3))))))
+    (length = 19) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App
+         (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+          (App (App (Var b) (App (Var mul) (Var 2)))
+           (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+         (Var 3))))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 2)))))))
+    (length = 23) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2))
+         (App
+          (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+           (App (App (Var b) (App (Var mul) (Var 2)))
+            (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+          (Var 2)))))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2))
+         (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 1))))))))
+    (length = 27) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2))
+         (App (App (Var mul) (Var 2))
+          (App
+           (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+            (App (App (Var b) (App (Var mul) (Var 2)))
+             (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+           (Var 1))))))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2))
+         (App (App (Var mul) (Var 2))
+          (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 0)))))))))
+    (length = 31) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2))
+         (App (App (Var mul) (Var 2))
+          (App (App (Var mul) (Var 2))
+           (App
+            (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+             (App (App (Var b) (App (Var mul) (Var 2)))
+              (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+            (Var 0)))))))))
+    Reduced:
+    (Var 128)
+    (length = 1) Eval_custom loop
+    Expanded:
+    (Var 128)
+    Reduced:
+    (Var 128)
     Result: "128" |}];
   test "ap pwr2 8";
   [%expect
     {|
     Eval (length: 3): ap "pwr2" "8"
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-    Substituting pwr2 => (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
-     (App (App (Var b) (App (Var mul) (Var 2)))
-      (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+    (length = 3) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App
+     (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+      (App (App (Var b) (App (Var mul) (Var 2)))
+       (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+     (Var 8))
+    Reduced:
+    (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 7)))
+    (length = 7) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App
+      (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+       (App (App (Var b) (App (Var mul) (Var 2)))
+        (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+      (Var 7)))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 6))))
+    (length = 11) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App
+       (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+        (App (App (Var b) (App (Var mul) (Var 2)))
+         (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+       (Var 6))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 5)))))
+    (length = 15) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App
+        (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+         (App (App (Var b) (App (Var mul) (Var 2)))
+          (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+        (Var 5)))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 4))))))
+    (length = 19) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App
+         (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+          (App (App (Var b) (App (Var mul) (Var 2)))
+           (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+         (Var 4))))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 3)))))))
+    (length = 23) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2))
+         (App
+          (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+           (App (App (Var b) (App (Var mul) (Var 2)))
+            (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+          (Var 3)))))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2))
+         (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 2))))))))
+    (length = 27) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2))
+         (App (App (Var mul) (Var 2))
+          (App
+           (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+            (App (App (Var b) (App (Var mul) (Var 2)))
+             (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+           (Var 2))))))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2))
+         (App (App (Var mul) (Var 2))
+          (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 1)))))))))
+    (length = 31) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2))
+         (App (App (Var mul) (Var 2))
+          (App (App (Var mul) (Var 2))
+           (App
+            (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+             (App (App (Var b) (App (Var mul) (Var 2)))
+              (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+            (Var 1)))))))))
+    Reduced:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2))
+         (App (App (Var mul) (Var 2))
+          (App (App (Var mul) (Var 2))
+           (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 0))))))))))
+    (length = 35) Eval_custom loop
+    Substituting pwr2
+    Expanded:
+    (App (App (Var mul) (Var 2))
+     (App (App (Var mul) (Var 2))
+      (App (App (Var mul) (Var 2))
+       (App (App (Var mul) (Var 2))
+        (App (App (Var mul) (Var 2))
+         (App (App (Var mul) (Var 2))
+          (App (App (Var mul) (Var 2))
+           (App (App (Var mul) (Var 2))
+            (App
+             (App
+              (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
+              (App (App (Var b) (App (Var mul) (Var 2)))
+               (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
+             (Var 0))))))))))
+    Reduced:
+    (Var 256)
+    (length = 1) Eval_custom loop
+    Expanded:
+    (Var 256)
+    Reduced:
+    (Var 256)
     Result: "256" |}];
   test "ap f2048 42";
   [%expect
     {|
     Eval (length: 3): ap "f2048" "42"
-    Substituting f2048 => (App (Var f) (Var f2048))
+    (length = 3) Eval_custom loop
+    Substituting f2048
+    Expanded:
+    (App (App (Var f) (Var f2048)) (Var 42))
+    Reduced:
+    (Var 42)
+    (length = 1) Eval_custom loop
+    Expanded:
+    (Var 42)
+    Reduced:
+    (Var 42)
     Result: "42" |}];
   test "ap ap ap s add inc 1";
   [%expect {|
     Eval (length: 7): ap (ap (ap "s" "add") "inc") "1"
+    (length = 7) Eval_custom loop
+    Expanded:
+    (App (App (App (Var s) (Var add)) (Var inc)) (Var 1))
+    Reduced:
+    (Var 3)
+    (length = 1) Eval_custom loop
+    Expanded:
+    (Var 3)
+    Reduced:
+    (Var 3)
     Result: "3" |}];
   test "ap ap ap c x y ap ap add 1 2";
   [%expect
     {|
     Eval (length: 11): ap (ap (ap "c" "x") "y") (ap (ap "add" "1") "2")
+    (length = 11) Eval_custom loop
+    Expanded:
+    (App (App (App (Var c) (Var x)) (Var y))
+     (App (App (Var add) (Var 1)) (Var 2)))
+    Reduced:
+    (App (App (Var x) (Var 3)) (Var y))
+    (length = 5) Eval_custom loop
+    Expanded:
+    (App (App (Var x) (Var 3)) (Var y))
+    Reduced:
+    (App (App (Var x) (Var 3)) (Var y))
     Result: ap (ap "x" "3") "y" |}];
   test "ap ap statelessdraw x0 x1";
   [%expect
     {|
     Eval (length: 5): ap (ap "statelessdraw" "x0") "x1"
-    Substituting statelessdraw => (App
-     (App (Var c)
-      (App (App (Var b) (Var b))
-       (App (App (Var b) (App (Var b) (App (Var cons) (Var 0))))
-        (App (App (Var c) (App (App (Var b) (Var b)) (Var cons)))
-         (App (App (Var c) (Var cons)) (Var nil))))))
+    (length = 5) Eval_custom loop
+    Substituting statelessdraw
+    Expanded:
+    (App
      (App
-      (App (Var c)
-       (App (App (Var b) (Var cons)) (App (App (Var c) (Var cons)) (Var nil))))
-      (Var nil)))
+      (App
+       (App (Var c)
+        (App (App (Var b) (Var b))
+         (App (App (Var b) (App (Var b) (App (Var cons) (Var 0))))
+          (App (App (Var c) (App (App (Var b) (Var b)) (Var cons)))
+           (App (App (Var c) (Var cons)) (Var nil))))))
+       (App
+        (App (Var c)
+         (App (App (Var b) (Var cons)) (App (App (Var c) (Var cons)) (Var nil))))
+        (Var nil)))
+      (Var x0))
+     (Var x1))
+    Reduced:
+    (App (App (Var cons) (Var 0))
+     (App (App (Var cons) (Var x0))
+      (App
+       (App (Var cons)
+        (App (App (Var cons) (App (App (Var cons) (Var x1)) (Var nil)))
+         (Var nil)))
+       (Var nil))))
+    (length = 21) Eval_custom loop
+    Expanded:
+    (App (App (Var cons) (Var 0))
+     (App (App (Var cons) (Var x0))
+      (App
+       (App (Var cons)
+        (App (App (Var cons) (App (App (Var cons) (Var x1)) (Var nil)))
+         (Var nil)))
+       (Var nil))))
+    Reduced:
+    (App (App (Var cons) (Var 0))
+     (App (App (Var cons) (Var x0))
+      (App
+       (App (Var cons)
+        (App (App (Var cons) (App (App (Var cons) (Var x1)) (Var nil)))
+         (Var nil)))
+       (Var nil))))
     Result: ap (ap "cons" "0") (ap (ap "cons" "x0") (ap (ap "cons" (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")) "nil"))
   |}]
 ;;

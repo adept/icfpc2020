@@ -14,7 +14,7 @@ let rec interact ~protocol ~state ~vector ~eval =
   printf "\nContinue? (Ctrl-C to quit)\n%!";
   let (_ : string) = In_channel.input_line_exn In_channel.stdin in
   let res = eval Eval.(App (App (protocol, state), vector)) in
-  printf !"res = %{Eval#hum}\n%!" res;
+  printf !"res = %{sexp: Eval.t}\n%!" res;
   interact ~protocol ~state ~vector ~eval
 ;;
 
