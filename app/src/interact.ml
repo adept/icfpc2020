@@ -19,10 +19,18 @@ let draw_pictures pics = List.iter ~f:draw_picture pics
 let get_click () =
   printf "waiting for click\n";
   let status = G.wait_next_event [ G.Button_down ] in
-  let x = (status.G.mouse_x - pixel_shift) / pixel_size in
-  let y = (status.G.mouse_y - pixel_shift) / pixel_size in
+  let x = (status.G.mouse_x / pixel_size) - pixel_shift in
+  let y = (status.G.mouse_y / pixel_size) - pixel_shift in
   printf "clicked: (%d,%d) => (%d,%d)\n%!" status.G.mouse_x status.G.mouse_y x y;
   x, y
+;;
+
+let continue () =
+  G.moveto 10 10;
+  G.set_color G.black;
+  G.draw_string "Click to continue";
+  let _status = G.wait_next_event [ G.Button_down ] in
+  G.clear_graph ()
 ;;
 
 let rec interact ~protocol ~state ~vector ~eval =
@@ -36,8 +44,7 @@ let rec interact ~protocol ~state ~vector ~eval =
     protocol
     state
     vector;
-  printf "\nContinue? (Ctrl-C to quit)\n%!";
-  let (_ : string) = In_channel.input_line_exn In_channel.stdin in
+  continue ();
   let res = eval Eval.(App (App (protocol, state), vector)) in
   printf !"res = %{sexp:Eval.t}\n%!" res;
   let flag = Eval.car res in
@@ -52,7 +59,6 @@ let rec interact ~protocol ~state ~vector ~eval =
     printf !"pictures = %{sexp:(int*int) list list}\n%!" pictures;
     G.clear_graph ();
     draw_pictures pictures;
-    (* TODO: choose where to click *)
     let x, y = get_click () in
     let clicked =
       Eval.(
