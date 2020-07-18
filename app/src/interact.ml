@@ -13,7 +13,7 @@ let rec interact ~protocol ~state ~vector ~defs =
     vector;
   printf "\nContinue? (Ctrl-C to quit)\n%!";
   let (_ : string) = In_channel.input_line_exn In_channel.stdin in
-  let res = Eval.eval Eval.(App (App (protocol, state), vector)) ~verbose:false ~defs in
+  let res = Eval.eval Eval.(App (App (protocol, state), vector)) ~verbose:true ~defs in
   printf !"res = %{Eval#hum}\n%!" res;
   interact ~protocol ~state ~vector ~defs
 ;;
