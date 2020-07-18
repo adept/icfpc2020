@@ -28,7 +28,7 @@ let get_click () =
   G.moveto 10 10;
   G.set_color G.black;
   G.draw_string "Click on pixel";
-  printf "waiting for click\n";
+  printf "waiting for click\n%!";
   let status = G.wait_next_event [ G.Button_down ] in
   let x = (status.G.mouse_x / pixel_size) - pixel_shift in
   let y = (status.G.mouse_y / pixel_size) - pixel_shift in
@@ -76,6 +76,8 @@ let rec interact ~protocol ~state ~vector ~eval =
     in
     interact ~protocol ~state:newState ~vector:clicked ~eval
   | _ ->
+    printf "\nPOSTing... Continue? (Ctrl-C to quit)\n%!";
+    let (_ : string) = In_channel.input_line_exn In_channel.stdin in
     (* (\* TODO : send *\)
      * interact ~protocol ~state ~vector ~eval *)
     failwith "flag = 1 not implemented"
