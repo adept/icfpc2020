@@ -103,8 +103,10 @@ let reduce t =
     | App (Var "cdr", App (App (Var "cons", _), arg2)) -> arg2
     | App (Var "inc", Var x) when is_int x -> Var (Int.to_string (Int.of_string x + 1))
     | App (Var "dec", Var x) when is_int x -> Var (Int.to_string (Int.of_string x - 1))
+    (* inc (dec) and dec (inc) *)
     | App (Var "inc", App (Var "dec", Var x)) -> Var x
     | App (Var "dec", App (Var "inc", Var x)) -> Var x
+    (* inc (add) and dec (add) *)
     | App (Var "dec", App (App (Var "add", Var x), y)) when is_int x ->
       App (App (Var "add", Var (Int.to_string (Int.of_string x - 1))), y)
     | App (Var "dec", App (App (Var "add", y), Var x)) when is_int x ->
@@ -113,8 +115,10 @@ let reduce t =
       App (App (Var "add", Var (Int.to_string (Int.of_string x + 1))), y)
     | App (Var "inc", App (App (Var "add", y), Var x)) when is_int x ->
       App (App (Var "add", y), Var (Int.to_string (Int.of_string x + 1)))
+    (* add 0 *)
     | App (App (Var "add", x), Var "0") -> x
     | App (App (Var "add", Var "0"), x) -> x
+    (* arithmetics *)
     | App (App (Var "add", Var x), Var y) when is_int x && is_int y ->
       Var (Int.to_string (Int.of_string x + Int.of_string y))
     | App (App (Var "div", Var x), Var y) when is_int x && is_int y ->
