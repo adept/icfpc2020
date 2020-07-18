@@ -9,6 +9,7 @@ module T = struct
       | Arg1 of string * t
       | Arg2 of string * t * t
       | App of t * t
+      | With_id of Id.t * t
     [@@deriving compare, equal, hash, sexp]
   end
 
@@ -25,6 +26,7 @@ let rec length = function
   | App (t1, t2) -> 1 + length t1 + length t2
   | Arg1 (_, t1) -> 1 + length t1
   | Arg2 (_, t1, t2) -> 1 + length t1 + length t2
+  | With_id (_, t) -> 1 + length t
 ;;
 
 let car = function
@@ -44,18 +46,19 @@ let cdr = function
  *   | Arg2 (n, t1, t2) -> String.is_prefix ~prefix:":" n || has_colon t1 || has_colon t2
  * ;; *)
 
-let rec to_string_hum = function
+let rec to_string_hum t =
+  let str_of_arg arg =
+    match arg with
+    | Var name -> sprintf {|"%s"|} name
+    | _ -> sprintf "(%s)" (to_string_hum arg)
+  in
+  match t with
   | Num x -> sprintf {|%d|} x
   | Var name -> sprintf {|"%s"|} name
   | Arg1 (n, x) -> sprintf {|[%s %s]|} n (to_string_hum x)
   | Arg2 (n, x, y) -> sprintf {|[%s %s %s]|} n (to_string_hum x) (to_string_hum y)
-  | App (x, y) ->
-    let str_of_arg arg =
-      match arg with
-      | Var name -> sprintf {|"%s"|} name
-      | _ -> sprintf "(%s)" (to_string_hum arg)
-    in
-    sprintf "ap %s %s" (str_of_arg x) (str_of_arg y)
+  | App (x, y) -> sprintf "ap %s %s" (str_of_arg x) (str_of_arg y)
+  | With_id (id, t) -> sprintf !"%{Id}@%s" id (str_of_arg t)
 ;;
 
 let parse ws =
@@ -99,15 +102,21 @@ let is_int str =
   | _ -> false
 ;;
 
-let reduce_maximally t =
+let reduce_maximally t ~reduce_cache ~cache_hits =
   let rec step = function
     | Var x when is_int x -> Num (Int.of_string x)
     | App (App (Var "f", _), y) -> y
     | App (App (Var "t", x), _) -> x
     | App (Var "i", arg1) -> arg1
     (* car/cdr *)
-    | App (Var "car", App (App (Var "cons", arg1), _)) -> arg1
-    | App (Var "cdr", App (App (Var "cons", _), arg2)) -> arg2
+    | App
+        ( Var "car"
+        , (App (App (Var "cons", arg1), _) | With_id (_, App (App (Var "cons", arg1), _)))
+        ) -> arg1
+    | App
+        ( Var "cdr"
+        , (App (App (Var "cons", _), arg2) | With_id (_, App (App (Var "cons", _), arg2)))
+        ) -> arg2
     | App (Var "car", x) -> App (x, Var "t")
     | App (Var "cdr", x) -> App (x, Var "f")
     (* cons *)
@@ -116,17 +125,27 @@ let reduce_maximally t =
     | App (Var "inc", Num x) -> Num (x + 1)
     | App (Var "dec", Num x) -> Num (x - 1)
     (* inc (dec) and dec (inc) *)
-    | App (Var "inc", App (Var "dec", Var x)) -> Var x
-    | App (Var "dec", App (Var "inc", Var x)) -> Var x
+    | App (Var "inc", (App (Var "dec", Var x) | With_id (_, App (Var "dec", Var x)))) ->
+      Var x
+    | App (Var "dec", (App (Var "inc", Var x) | With_id (_, App (Var "inc", Var x)))) ->
+      Var x
     (* inc (add) and dec (add) *)
-    | App (Var "dec", App (App (Var "add", Num x), y)) ->
-      App (App (Var "add", Num (x - 1)), y)
-    | App (Var "dec", App (App (Var "add", y), Num x)) ->
-      App (App (Var "add", y), Num (x - 1))
-    | App (Var "inc", App (App (Var "add", Num x), y)) ->
-      App (App (Var "add", Num (x + 1)), y)
-    | App (Var "inc", App (App (Var "add", y), Num x)) ->
-      App (App (Var "add", y), Num (x + 1))
+    | App
+        ( Var "dec"
+        , (App (App (Var "add", Num x), y) | With_id (_, App (App (Var "add", Num x), y)))
+        ) -> App (App (Var "add", Num (x - 1)), y)
+    | App
+        ( Var "dec"
+        , (App (App (Var "add", y), Num x) | With_id (_, App (App (Var "add", y), Num x)))
+        ) -> App (App (Var "add", y), Num (x - 1))
+    | App
+        ( Var "inc"
+        , (App (App (Var "add", Num x), y) | With_id (_, App (App (Var "add", Num x), y)))
+        ) -> App (App (Var "add", Num (x + 1)), y)
+    | App
+        ( Var "inc"
+        , (App (App (Var "add", y), Num x) | With_id (_, App (App (Var "add", y), Num x)))
+        ) -> App (App (Var "add", y), Num (x + 1))
     (* add 0 *)
     | App (App (Var "add", x), Num 0) -> x
     | App (Var "add", Num 0) -> Var "i"
@@ -151,7 +170,10 @@ let reduce_maximally t =
     (*lt*)
     | App (App (Var "lt", Num x), Num y) -> if Int.( < ) x y then Var "t" else Var "f"
     | App (Var "isnil", Var "nil") -> Var "t"
-    | App (Var "isnil", App (App (Var "cons", _), _)) -> Var "f"
+    | App
+        ( Var "isnil"
+        , (App (App (Var "cons", _), _) | With_id (_, App (App (Var "cons", _), _))) ) ->
+      Var "f"
     | App (Var "isnil", Num _) -> Var "f"
     | App (App (App (Var "if0", Num x), then_branch), else_branch) ->
       if Int.equal x 0 then then_branch else else_branch
@@ -167,9 +189,23 @@ let reduce_maximally t =
     | App (Var "s", x) -> Arg1 ("s", x)
     | App (Arg1 ("s", x), y) -> Arg2 ("s", x, y)
     | App (Arg2 ("s", x, y), z) ->
-      let z = step z in
+      let z =
+        let z = step z in
+        match z with
+        | Var _ | Num _ | Arg1 _ | Arg2 _ | With_id _ -> z
+        | App _ -> With_id (Id.create (), z)
+      in
       step (App (App (x, z), App (y, z)))
     (* Descent *)
+    | With_id (id, t1) ->
+      (match Hashtbl.find reduce_cache id with
+      | None ->
+        let res = step t1 in
+        Hashtbl.set reduce_cache ~key:id ~data:res;
+        With_id (id, res)
+      | Some res ->
+        incr cache_hits;
+        With_id (id, res))
     | Arg1 (n, t1) -> Arg1 (n, step t1)
     | Arg2 (n, t1, t2) -> Arg2 (n, step t1, step t2)
     | App (arg1, arg2) ->
@@ -189,6 +225,8 @@ let reduce_maximally t =
 ;;
 
 let eval_custom ~verbose ~defs =
+  let reduce_cache = Id.Table.create () in
+  let cache_hits = ref 0 in
   Staged.stage (fun t ->
       if verbose then printf "Eval (length: %d): %s\n%!" (length t) (to_string_hum t);
       let rec expand_once t =
@@ -216,9 +254,17 @@ let eval_custom ~verbose ~defs =
             (match expand_once t2 with
             | t2' when not (equal t2 t2') -> App (t1, t2')
             | _ -> t))
+        | With_id (id, t) ->
+          (match expand_once t with
+          | t' when not (equal t t') ->
+            (* We've expanded the subtree, so the old cache value is no longer
+               valid. *)
+            (* Hashtbl.remove reduce_cache id; *)
+            t'
+          | _ -> t)
       in
       let rec reduce_fix t =
-        let t' = reduce_maximally t in
+        let t' = reduce_maximally t ~reduce_cache ~cache_hits in
         if equal t' t then t else reduce_fix t'
       in
       let seen = T.Hash_set.create () in
@@ -230,7 +276,13 @@ let eval_custom ~verbose ~defs =
           ());
         Hash_set.add seen t;
         if verbose
-        then printf "(length = %d) Eval_custom loop (%d)\n%!" (length t) (T.hash t);
+        then
+          printf
+            "(length = %d) Eval_custom loop (%d) (cache: %d; hits: %d)\n%!"
+            (length t)
+            (T.hash t)
+            (Hashtbl.length reduce_cache)
+            !cache_hits;
         let t' = expand_once t in
         (* if verbose then printf !"Expanded:\n%{sexp: t}\n%!" t'; *)
         let t' = reduce_fix t' in

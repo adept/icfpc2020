@@ -7,6 +7,7 @@ type t =
   | Arg1 of string * t
   | Arg2 of string * t * t
   | App of t * t
+  | With_id of Id.t * t
 [@@deriving equal, sexp]
 
 val car : t -> t

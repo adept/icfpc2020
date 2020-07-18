@@ -32,6 +32,6 @@ let rec interact ~protocol ~state ~vector ~eval =
 let run ~filename ~protocol ~state ~vector =
   let defs = Eval.load_defs_exn ~filename in
   let p str = Eval.parse_exn (String.split ~on:' ' str) in
-  let eval = Eval.eval_custom ~verbose:true ~defs |> Staged.unstage in
+  let eval = Eval.eval_custom ~verbose:false ~defs |> Staged.unstage in
   interact ~protocol:(p protocol) ~state:(p state) ~vector:(p vector) ~eval
 ;;
