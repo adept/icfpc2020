@@ -116,9 +116,14 @@ let reduce t =
       if String.equal arg1 arg2 then Var "t" else Var "f"
     | App (App (Var "lt", Var x), Var y) when is_int x && is_int y ->
       if Int.( < ) (Int.of_string x) (Int.of_string y) then Var "t" else Var "f"
-    | App (Var "isnil", Abs (_, x)) ->
-      if Lambda.Bool.is_bool x && Lambda.Bool.to_bool x then Var "t" else Var "f"
-    | App (Var "isnil", _) -> Var "f"
+    | App (Var "isnil", x) ->
+      if Lambda.Bool.is_bool x && Lambda.Bool.to_bool x
+      then Var "t"
+      else (
+        match x with
+        | Abs (_, x) ->
+          if Lambda.Bool.is_bool x && Lambda.Bool.to_bool x then Var "t" else Var "f"
+        | _ -> Var "f")
     | App (arg1, arg2) -> App (loop arg1, loop arg2)
     | t -> t
   in
@@ -184,7 +189,6 @@ let%expect_test "base combinators" =
   test "ap isnil nil";
   test "ap isnil ap ap cons x0 x1";
   test "ap isnil ap car ap ap cons nil x0";
-  (* this does not work because it was eta-reduced. sadness *)
   test "ap isnil ap car ap cdr ap ap cons x0 nil";
   test "ap ap lt 0 -1";
   test "ap ap lt 0 0";
@@ -240,7 +244,7 @@ let%expect_test "base combinators" =
     Starting evaluation: ap isnil ap car ap ap cons nil x0
     Result: "t"
     Starting evaluation: ap isnil ap car ap cdr ap ap cons x0 nil
-    Result: "f"
+    Result: "t"
     Starting evaluation: ap ap lt 0 -1
     Result: "f"
     Starting evaluation: ap ap lt 0 0
@@ -286,7 +290,8 @@ let%expect_test "eval" =
     printf "Result: %s\n" (to_string_hum res)
   in
   test "ap f2048 42";
-  [%expect {|
+  [%expect
+    {|
     Defs:
     b := \x -> \y -> \z -> ap "x" (ap "y" "z")
     c := \x -> \y -> \z -> ap (ap "x" "z") "y"
