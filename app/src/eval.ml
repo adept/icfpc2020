@@ -3,6 +3,7 @@ module Id = Unique_id.Int ()
 
 type t =
   | Var of string
+  | Num of int
   | Arg1 of string * t
   | Arg2 of string * t * t
   | App of t * t
@@ -10,6 +11,7 @@ type t =
 
 let rec equal t1 t2 =
   match t1, t2 with
+  | Num n1, Num n2 -> n1 = n2
   | Var n1, Var n2 -> String.equal n1 n2
   | App (t11, t12), App (t21, t22) -> equal t11 t21 && equal t12 t22
   | Arg1 (n1, x1), Arg1 (n2, y1) -> String.equal n1 n2 && equal x1 y1
@@ -19,13 +21,22 @@ let rec equal t1 t2 =
 ;;
 
 let rec length = function
+  | Num _ -> 1
   | Var _ -> 1
   | App (t1, t2) -> 1 + length t1 + length t2
   | Arg1 (_, t1) -> 1 + length t1
   | Arg2 (_, t1, t2) -> 1 + length t1 + length t2
 ;;
 
+(* let rec has_colon = function
+ *   | Var n -> String.is_prefix ~prefix:":" n
+ *   | App (t1, t2) -> has_colon t1 || has_colon t2
+ *   | Arg1 (n, t1) -> String.is_prefix ~prefix:":" n || has_colon t1
+ *   | Arg2 (n, t1, t2) -> String.is_prefix ~prefix:":" n || has_colon t1 || has_colon t2
+ * ;; *)
+
 let rec to_string_hum = function
+  | Num x -> sprintf {|%d|} x
   | Var name -> sprintf {|"%s"|} name
   | Arg1 (n, x) -> sprintf {|[%s %s]|} n (to_string_hum x)
   | Arg2 (n, x, y) -> sprintf {|[%s %s %s]|} n (to_string_hum x) (to_string_hum y)
@@ -81,55 +92,52 @@ let is_int str =
 
 let reduce_maximally t =
   let rec step = function
+    | Var x when is_int x -> Num (Int.of_string x)
     | App (App (Var "f", _), y) -> y
     | App (App (Var "t", x), _) -> x
     | App (Var "i", arg1) -> arg1
     | App (Var "car", App (App (Var "cons", arg1), _)) -> arg1
     | App (Var "cdr", App (App (Var "cons", _), arg2)) -> arg2
     (* inc and dec *)
-    | App (Var "inc", Var x) when is_int x -> Var (Int.to_string (Int.of_string x + 1))
-    | App (Var "dec", Var x) when is_int x -> Var (Int.to_string (Int.of_string x - 1))
+    | App (Var "inc", Num x) -> Num (x + 1)
+    | App (Var "dec", Num x) -> Num (x - 1)
     (* inc (dec) and dec (inc) *)
     | App (Var "inc", App (Var "dec", Var x)) -> Var x
     | App (Var "dec", App (Var "inc", Var x)) -> Var x
     (* inc (add) and dec (add) *)
-    | App (Var "dec", App (App (Var "add", Var x), y)) when is_int x ->
-      App (App (Var "add", Var (Int.to_string (Int.of_string x - 1))), y)
-    | App (Var "dec", App (App (Var "add", y), Var x)) when is_int x ->
-      App (App (Var "add", y), Var (Int.to_string (Int.of_string x - 1)))
-    | App (Var "inc", App (App (Var "add", Var x), y)) when is_int x ->
-      App (App (Var "add", Var (Int.to_string (Int.of_string x + 1))), y)
-    | App (Var "inc", App (App (Var "add", y), Var x)) when is_int x ->
-      App (App (Var "add", y), Var (Int.to_string (Int.of_string x + 1)))
+    | App (Var "dec", App (App (Var "add", Num x), y)) ->
+      App (App (Var "add", Num (x - 1)), y)
+    | App (Var "dec", App (App (Var "add", y), Num x)) ->
+      App (App (Var "add", y), Num (x - 1))
+    | App (Var "inc", App (App (Var "add", Num x), y)) ->
+      App (App (Var "add", Num (x + 1)), y)
+    | App (Var "inc", App (App (Var "add", y), Num x)) ->
+      App (App (Var "add", y), Num (x + 1))
     (* add 0 *)
-    | App (App (Var "add", x), Var "0") -> x
-    | App (App (Var "add", Var "0"), x) -> x
-    | App (Var "add", Var "-1") -> Var "dec"
-    | App (Var "add", Var "1") -> Var "inc"
+    | App (App (Var "add", x), Num 0) -> x
+    | App (Var "add", Num 0) -> Var "i"
+    | App (Var "add", Num -1) -> Var "dec"
+    | App (Var "add", Num 1) -> Var "inc"
     (* arithmetics *)
-    | App (App (Var "add", Var x), Var y) when is_int x && is_int y ->
-      Var (Int.to_string (Int.of_string x + Int.of_string y))
-    | App (App (Var "div", Var x), Var y) when is_int x && is_int y ->
-      Var (Int.to_string (Int.of_string x / Int.of_string y))
-    | App (App (Var "div", Var x), Var "1") -> Var x
-    | App (App (Var "mul", Var x), Var y) when is_int x && is_int y ->
-      Var (Int.to_string (Int.of_string x * Int.of_string y))
-    | App (App (Var "mul", Var x), Var "1") -> Var x
-    | App (App (Var "mul", Var _), Var "0") -> Var "0"
-    | App (App (Var "mul", Var "1"), Var x) -> Var x
-    | App (App (Var "mul", Var "0"), _) -> Var "0"
-    | App (Var "neg", Var x) when is_int x ->
-      Var (Int.to_string (Int.neg (Int.of_string x)))
+    | App (App (Var "add", Num x), Num y) -> Num (x + y)
+    | App (App (Var "div", Num x), Num y) -> Num (x / y)
+    | App (App (Var "div", x), Num 1) -> x
+    | App (App (Var "mul", Num x), Num y) -> Num (x * y)
+    | App (App (Var "mul", x), Num 1) -> x
+    | App (App (Var "mul", _), Num 0) -> Num 0
+    | App (App (Var "mul", Num 1), x) -> x
+    | App (App (Var "mul", Num 0), _) -> Num 0
+    | App (Var "neg", Num 0) -> Num 0
+    | App (Var "neg", Num x) -> Num (Int.neg x)
     (* eq *)
+    | App (App (Var "eq", Num arg1), Num arg2) -> if arg1 = arg2 then Var "t" else Var "f"
     | App (App (Var "eq", Var arg1), Var arg2) ->
       if String.equal arg1 arg2 then Var "t" else Var "f"
     (*lt*)
-    | App (App (Var "lt", Var x), Var y) when is_int x && is_int y ->
-      if Int.( < ) (Int.of_string x) (Int.of_string y) then Var "t" else Var "f"
+    | App (App (Var "lt", Num x), Num y) -> if Int.( < ) x y then Var "t" else Var "f"
     | App (Var "isnil", Var "nil") -> Var "t"
-    | App (App (App (Var "if0", Var "0"), then_branch), _else_branch) -> then_branch
-    | App (App (App (Var "if0", Var x), _then_branch), else_branch)
-      when is_int x && Int.of_string x <> 0 -> else_branch
+    | App (App (App (Var "if0", Num x), then_branch), else_branch) ->
+      if x = 0 then then_branch else else_branch
     (* B *)
     | App (Var "b", x) -> Arg1 ("b", x)
     | App (Arg1 ("b", x), y) -> Arg2 ("b", x, y)
@@ -141,7 +149,9 @@ let reduce_maximally t =
     (* S *)
     | App (Var "s", x) -> Arg1 ("s", x)
     | App (Arg1 ("s", x), y) -> Arg2 ("s", x, y)
-    | App (Arg2 ("s", x, y), z) -> step (App (App (x, z), App (y, z)))
+    | App (Arg2 ("s", x, y), z) ->
+      let z = step z in
+      step (App (App (x, z), App (y, z)))
     (* Descent *)
     | Arg1 (n, t1) -> Arg1 (n, step t1)
     | Arg2 (n, t1, t2) -> Arg2 (n, step t1, step t2)
@@ -166,6 +176,7 @@ let eval_custom ~verbose ~defs =
       if verbose then printf "Eval (length: %d): %s\n%!" (length t) (to_string_hum t);
       let rec expand_once t =
         match t with
+        | Num _ -> t
         | Arg1 (n, t) -> Arg1 (n, expand_once t)
         | Arg2 (n, t1, t2) ->
           (match expand_once t1 with
@@ -202,10 +213,10 @@ let eval_custom ~verbose ~defs =
         if verbose then printf !"Reduced hum:\n%s\n%!" (to_string_hum t');
         if equal t' t
         then t
-        else (
-          printf "===========\n%!";
-          let (_ : string) = In_channel.input_line_exn In_channel.stdin in
-          loop t')
+        else
+          (* printf "===========\n%!"; *)
+          (* let (_ : string) = In_channel.input_line_exn In_channel.stdin in *)
+          loop t'
       in
       loop t)
 ;;

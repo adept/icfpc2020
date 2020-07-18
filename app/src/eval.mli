@@ -3,6 +3,7 @@ module Id : Unique_id.Id
 
 type t =
   | Var of string
+  | Num of int
   | Arg1 of string * t
   | Arg2 of string * t * t
   | App of t * t

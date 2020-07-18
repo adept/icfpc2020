@@ -49,13 +49,13 @@ let%expect_test "base combinators" =
   [%expect
     {|
     Starting evaluation: ap inc 0
-    Result: "1"
+    Result: 1
     Starting evaluation: ap inc 300
-    Result: "301"
+    Result: 301
     Starting evaluation: ap inc -1
-    Result: "0"
+    Result: 0
     Starting evaluation: ap inc -2
-    Result: "-1" |}];
+    Result: -1 |}];
   (* #6 *)
   test "ap dec 1";
   test "ap dec 1024";
@@ -64,13 +64,13 @@ let%expect_test "base combinators" =
   [%expect
     {|
     Starting evaluation: ap dec 1
-    Result: "0"
+    Result: 0
     Starting evaluation: ap dec 1024
-    Result: "1023"
+    Result: 1023
     Starting evaluation: ap dec 0
-    Result: "-1"
+    Result: -1
     Starting evaluation: ap dec -1
-    Result: "-2" |}];
+    Result: -2 |}];
   (* #7 *)
   test "ap ap add 1 2";
   test "ap ap add 2 1";
@@ -80,15 +80,15 @@ let%expect_test "base combinators" =
   [%expect
     {|
     Starting evaluation: ap ap add 1 2
-    Result: "3"
+    Result: 3
     Starting evaluation: ap ap add 2 1
-    Result: "3"
+    Result: 3
     Starting evaluation: ap ap add 0 1
-    Result: "1"
+    Result: 1
     Starting evaluation: ap ap add 2 3
-    Result: "5"
+    Result: 5
     Starting evaluation: ap ap add 3 5
-    Result: "8" |}];
+    Result: 8 |}];
   (* #8 *)
   test "ap ap add 0 x0";
   test "ap ap add x1 0";
@@ -111,15 +111,15 @@ let%expect_test "base combinators" =
   [%expect
     {|
     Starting evaluation: ap ap mul 4 2
-    Result: "8"
+    Result: 8
     Starting evaluation: ap ap mul 3 4
-    Result: "12"
+    Result: 12
     Starting evaluation: ap ap mul 3 -2
-    Result: "-6"
+    Result: -6
     Starting evaluation: ap ap mul x0 x1
     Result: ap (ap "mul" "x0") "x1"
     Starting evaluation: ap ap mul x0 0
-    Result: "0"
+    Result: 0
     Starting evaluation: ap ap mul x0 1
     Result: "x0" |}];
   (* #10 *)
@@ -136,23 +136,23 @@ let%expect_test "base combinators" =
   [%expect
     {|
     Starting evaluation: ap ap div 4 2
-    Result: "2"
+    Result: 2
     Starting evaluation: ap ap div 4 3
-    Result: "1"
+    Result: 1
     Starting evaluation: ap ap div 4 4
-    Result: "1"
+    Result: 1
     Starting evaluation: ap ap div 4 5
-    Result: "0"
+    Result: 0
     Starting evaluation: ap ap div 5 2
-    Result: "2"
+    Result: 2
     Starting evaluation: ap ap div 6 -2
-    Result: "-3"
+    Result: -3
     Starting evaluation: ap ap div 5 -3
-    Result: "-1"
+    Result: -1
     Starting evaluation: ap ap div -5 3
-    Result: "-1"
+    Result: -1
     Starting evaluation: ap ap div -5 -3
-    Result: "1"
+    Result: 1
     Starting evaluation: ap ap div x0 1
     Result: "x0" |}];
   (* #11 *)
@@ -231,15 +231,15 @@ let%expect_test "base combinators" =
   [%expect
     {|
     Starting evaluation: ap neg 0
-    Result: "0"
+    Result: 0
     Starting evaluation: ap neg 1
-    Result: "-1"
+    Result: -1
     Starting evaluation: ap neg -1
-    Result: "1"
+    Result: 1
     Starting evaluation: ap neg 2
-    Result: "-2"
+    Result: -2
     Starting evaluation: ap neg -2
-    Result: "2" |}];
+    Result: 2 |}];
   (* #17 *)
   test "ap inc ap inc 0";
   test "ap inc ap inc ap inc 0";
@@ -253,9 +253,9 @@ let%expect_test "base combinators" =
   [%expect
     {|
     Starting evaluation: ap inc ap inc 0
-    Result: "2"
+    Result: 2
     Starting evaluation: ap inc ap inc ap inc 0
-    Result: "3"
+    Result: 3
     Starting evaluation: ap inc ap dec x0
     Result: "x0"
     Starting evaluation: ap dec ap inc x0
@@ -263,13 +263,13 @@ let%expect_test "base combinators" =
     Starting evaluation: ap dec ap ap add x0 1
     Result: "x0"
     Starting evaluation: ap ap add ap ap add 2 3 4
-    Result: "9"
+    Result: 9
     Starting evaluation: ap ap add 2 ap ap add 3 4
-    Result: "9"
+    Result: 9
     Starting evaluation: ap ap add ap ap mul 2 3 4
-    Result: "10"
+    Result: 10
     Starting evaluation: ap ap mul 2 ap ap add 3 4
-    Result: "14" |}];
+    Result: 14 |}];
   (* #21 *)
   test "ap ap t x0 x1";
   test "ap ap t 1 5";
@@ -281,13 +281,13 @@ let%expect_test "base combinators" =
     Starting evaluation: ap ap t x0 x1
     Result: "x0"
     Starting evaluation: ap ap t 1 5
-    Result: "1"
+    Result: 1
     Starting evaluation: ap ap t t i
     Result: "t"
     Starting evaluation: ap ap t t ap inc 5
     Result: "t"
     Starting evaluation: ap ap t ap inc 5 t
-    Result: "6" |}];
+    Result: 6 |}];
   (* #37 *)
   test "ap ap ap if0 0 x0 x1";
   test "ap ap ap if0 1 x0 x1";
@@ -337,9 +337,9 @@ let%expect_test "base combinators" =
   [%expect
     {|
     Starting evaluation: ap ap add 1 2
-    Result: "3"
+    Result: 3
     Starting evaluation: ap ap add 3 ap ap add 1 2
-    Result: "6"
+    Result: 6
     Starting evaluation: ap car ap ap cons x0 x1
     Result: "x0"
     Starting evaluation: ap cdr ap ap cons x0 x1
@@ -349,7 +349,7 @@ let%expect_test "base combinators" =
     Starting evaluation: ap cdr ap ap cons x0 ap ap cons x1 x2
     Result: ap (ap "cons" "x1") "x2"
     Starting evaluation: ap ap div 4 2
-    Result: "2"
+    Result: 2
     Starting evaluation: ap ap div x0 1
     Result: "x0"
     Starting evaluation: ap ap eq x0 x0
@@ -363,7 +363,7 @@ let%expect_test "base combinators" =
     Starting evaluation: ap i x0
     Result: "x0"
     Starting evaluation: ap i ap add 1
-    Result: ap "add" "1"
+    Result: "inc"
     Starting evaluation: ap isnil nil
     Result: "t"
     Starting evaluation: ap isnil ap ap cons x0 x1
@@ -379,33 +379,33 @@ let%expect_test "base combinators" =
     Starting evaluation: ap ap lt 0 1
     Result: "t"
     Starting evaluation: ap neg 0
-    Result: "0"
+    Result: 0
     Starting evaluation: ap neg 1
-    Result: "-1"
+    Result: -1
     Starting evaluation: ap neg -1
-    Result: "1"
+    Result: 1
     Starting evaluation: ap ap mul 4 2
-    Result: "8"
+    Result: 8
     Starting evaluation: ap ap mul x0 x1
     Result: ap (ap "mul" "x0") "x1"
     Starting evaluation: ap ap mul x0 0
-    Result: "0"
+    Result: 0
     Starting evaluation: ap ap mul x0 1
     Result: "x0"
     Starting evaluation: ap ap mul 0 x0
-    Result: "0"
+    Result: 0
     Starting evaluation: ap ap mul 1 x0
     Result: "x0"
     Starting evaluation: ap ap ap s x0 x1 x2
     Result: ap (ap "x0" "x2") (ap "x1" "x2")
     Starting evaluation: ap ap ap s add inc 1
-    Result: "3"
+    Result: 3
     Starting evaluation: ap ap ap s mul ap add 1 6
-    Result: "42"
+    Result: 42
     Starting evaluation: ap ap ap c x0 x1 x2
     Result: ap (ap "x0" "x2") "x1"
     Starting evaluation: ap ap ap c add 1 2
-    Result: "3"
+    Result: 3
     Starting evaluation: ap ap ap b x0 x1 x2
     Result: ap "x0" (ap "x1" "x2")
     Starting evaluation: ap ap ap b inc dec x0
@@ -442,37 +442,45 @@ let%expect_test "eval" =
        (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
      (Var 2))
     Reduced:
-    (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 1)))
+    (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 1)))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap "pwr2" (1))
     (length = 7) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
      (App
       (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
        (App (App (Var b) (App (Var mul) (Var 2)))
         (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-      (Var 1)))
+      (Num 1)))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 0))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 0))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (0)))
     (length = 11) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
       (App
        (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
         (App (App (Var b) (App (Var mul) (Var 2)))
          (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-       (Var 0))))
+       (Num 0))))
     Reduced:
-    (Var 4)
+    (Num 4)
+    Reduced hum:
+    4
     (length = 1) Eval_custom loop
     Expanded:
-    (Var 4)
+    (Num 4)
     Reduced:
-    (Var 4)
-    Result: "4" |}];
+    (Num 4)
+    Reduced hum:
+    4
+    Result: 4 |}];
   test "ap pwr2 3";
   [%expect
     {|
@@ -486,52 +494,62 @@ let%expect_test "eval" =
        (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
      (Var 3))
     Reduced:
-    (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 2)))
+    (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 2)))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap "pwr2" (2))
     (length = 7) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
      (App
       (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
        (App (App (Var b) (App (Var mul) (Var 2)))
         (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-      (Var 2)))
+      (Num 2)))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 1))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 1))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (1)))
     (length = 11) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
       (App
        (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
         (App (App (Var b) (App (Var mul) (Var 2)))
          (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-       (Var 1))))
+       (Num 1))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 0)))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 0)))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (0))))
     (length = 15) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
        (App
         (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
          (App (App (Var b) (App (Var mul) (Var 2)))
           (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-        (Var 0)))))
+        (Num 0)))))
     Reduced:
-    (Var 8)
+    (Num 8)
+    Reduced hum:
+    8
     (length = 1) Eval_custom loop
     Expanded:
-    (Var 8)
+    (Num 8)
     Reduced:
-    (Var 8)
-    Result: "8" |}];
+    (Num 8)
+    Reduced hum:
+    8
+    Result: 8 |}];
   test "ap pwr2 4";
   [%expect
     {|
@@ -545,69 +563,81 @@ let%expect_test "eval" =
        (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
      (Var 4))
     Reduced:
-    (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 3)))
+    (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 3)))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap "pwr2" (3))
     (length = 7) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
      (App
       (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
        (App (App (Var b) (App (Var mul) (Var 2)))
         (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-      (Var 3)))
+      (Num 3)))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 2))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 2))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (2)))
     (length = 11) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
       (App
        (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
         (App (App (Var b) (App (Var mul) (Var 2)))
          (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-       (Var 2))))
+       (Num 2))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 1)))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 1)))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (1))))
     (length = 15) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
        (App
         (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
          (App (App (Var b) (App (Var mul) (Var 2)))
           (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-        (Var 1)))))
+        (Num 1)))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 0))))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 0))))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (0)))))
     (length = 19) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
         (App
          (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
           (App (App (Var b) (App (Var mul) (Var 2)))
            (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-         (Var 0))))))
+         (Num 0))))))
     Reduced:
-    (Var 16)
+    (Num 16)
+    Reduced hum:
+    16
     (length = 1) Eval_custom loop
     Expanded:
-    (Var 16)
+    (Num 16)
     Reduced:
-    (Var 16)
-    Result: "16" |}];
+    (Num 16)
+    Reduced hum:
+    16
+    Result: 16 |}];
   test "ap pwr2 5";
   [%expect
     {|
@@ -621,88 +651,102 @@ let%expect_test "eval" =
        (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
      (Var 5))
     Reduced:
-    (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 4)))
+    (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 4)))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap "pwr2" (4))
     (length = 7) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
      (App
       (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
        (App (App (Var b) (App (Var mul) (Var 2)))
         (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-      (Var 4)))
+      (Num 4)))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 3))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 3))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (3)))
     (length = 11) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
       (App
        (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
         (App (App (Var b) (App (Var mul) (Var 2)))
          (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-       (Var 3))))
+       (Num 3))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 2)))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 2)))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (2))))
     (length = 15) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
        (App
         (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
          (App (App (Var b) (App (Var mul) (Var 2)))
           (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-        (Var 2)))))
+        (Num 2)))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 1))))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 1))))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (1)))))
     (length = 19) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
         (App
          (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
           (App (App (Var b) (App (Var mul) (Var 2)))
            (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-         (Var 1))))))
+         (Num 1))))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 0)))))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 0)))))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (0))))))
     (length = 23) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2))
          (App
           (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
            (App (App (Var b) (App (Var mul) (Var 2)))
             (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-          (Var 0)))))))
+          (Num 0)))))))
     Reduced:
-    (Var 32)
+    (Num 32)
+    Reduced hum:
+    32
     (length = 1) Eval_custom loop
     Expanded:
-    (Var 32)
+    (Num 32)
     Reduced:
-    (Var 32)
-    Result: "32" |}];
+    (Num 32)
+    Reduced hum:
+    32
+    Result: 32 |}];
   test "ap pwr2 6";
   [%expect
     {|
@@ -716,109 +760,125 @@ let%expect_test "eval" =
        (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
      (Var 6))
     Reduced:
-    (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 5)))
+    (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 5)))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap "pwr2" (5))
     (length = 7) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
      (App
       (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
        (App (App (Var b) (App (Var mul) (Var 2)))
         (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-      (Var 5)))
+      (Num 5)))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 4))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 4))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (4)))
     (length = 11) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
       (App
        (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
         (App (App (Var b) (App (Var mul) (Var 2)))
          (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-       (Var 4))))
+       (Num 4))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 3)))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 3)))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (3))))
     (length = 15) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
        (App
         (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
          (App (App (Var b) (App (Var mul) (Var 2)))
           (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-        (Var 3)))))
+        (Num 3)))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 2))))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 2))))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (2)))))
     (length = 19) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
         (App
          (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
           (App (App (Var b) (App (Var mul) (Var 2)))
            (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-         (Var 2))))))
+         (Num 2))))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 1)))))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 1)))))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (1))))))
     (length = 23) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2))
          (App
           (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
            (App (App (Var b) (App (Var mul) (Var 2)))
             (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-          (Var 1)))))))
+          (Num 1)))))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2))
-         (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 0))))))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2))
+         (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 0))))))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (0)))))))
     (length = 27) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2))
-         (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2))
+         (App (App (Var mul) (Num 2))
           (App
            (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
             (App (App (Var b) (App (Var mul) (Var 2)))
              (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-           (Var 0))))))))
+           (Num 0))))))))
     Reduced:
-    (Var 64)
+    (Num 64)
+    Reduced hum:
+    64
     (length = 1) Eval_custom loop
     Expanded:
-    (Var 64)
+    (Num 64)
     Reduced:
-    (Var 64)
-    Result: "64" |}];
+    (Num 64)
+    Reduced hum:
+    64
+    Result: 64 |}];
   test "ap pwr2 7";
   [%expect
     {|
@@ -832,132 +892,150 @@ let%expect_test "eval" =
        (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
      (Var 7))
     Reduced:
-    (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 6)))
+    (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 6)))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap "pwr2" (6))
     (length = 7) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
      (App
       (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
        (App (App (Var b) (App (Var mul) (Var 2)))
         (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-      (Var 6)))
+      (Num 6)))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 5))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 5))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (5)))
     (length = 11) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
       (App
        (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
         (App (App (Var b) (App (Var mul) (Var 2)))
          (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-       (Var 5))))
+       (Num 5))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 4)))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 4)))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (4))))
     (length = 15) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
        (App
         (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
          (App (App (Var b) (App (Var mul) (Var 2)))
           (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-        (Var 4)))))
+        (Num 4)))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 3))))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 3))))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (3)))))
     (length = 19) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
         (App
          (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
           (App (App (Var b) (App (Var mul) (Var 2)))
            (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-         (Var 3))))))
+         (Num 3))))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 2)))))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 2)))))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (2))))))
     (length = 23) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2))
          (App
           (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
            (App (App (Var b) (App (Var mul) (Var 2)))
             (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-          (Var 2)))))))
+          (Num 2)))))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2))
-         (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 1))))))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2))
+         (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 1))))))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (1)))))))
     (length = 27) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2))
-         (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2))
+         (App (App (Var mul) (Num 2))
           (App
            (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
             (App (App (Var b) (App (Var mul) (Var 2)))
              (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-           (Var 1))))))))
+           (Num 1))))))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2))
-         (App (App (Var mul) (Var 2))
-          (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 0)))))))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2))
+         (App (App (Var mul) (Num 2))
+          (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 0)))))))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (0))))))))
     (length = 31) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2))
-         (App (App (Var mul) (Var 2))
-          (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2))
+         (App (App (Var mul) (Num 2))
+          (App (App (Var mul) (Num 2))
            (App
             (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
              (App (App (Var b) (App (Var mul) (Var 2)))
               (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-            (Var 0)))))))))
+            (Num 0)))))))))
     Reduced:
-    (Var 128)
+    (Num 128)
+    Reduced hum:
+    128
     (length = 1) Eval_custom loop
     Expanded:
-    (Var 128)
+    (Num 128)
     Reduced:
-    (Var 128)
-    Result: "128" |}];
+    (Num 128)
+    Reduced hum:
+    128
+    Result: 128 |}];
   test "ap pwr2 8";
   [%expect
     {|
@@ -971,158 +1049,178 @@ let%expect_test "eval" =
        (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
      (Var 8))
     Reduced:
-    (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 7)))
+    (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 7)))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap "pwr2" (7))
     (length = 7) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
      (App
       (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
        (App (App (Var b) (App (Var mul) (Var 2)))
         (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-      (Var 7)))
+      (Num 7)))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 6))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 6))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (6)))
     (length = 11) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
       (App
        (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
         (App (App (Var b) (App (Var mul) (Var 2)))
          (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-       (Var 6))))
+       (Num 6))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 5)))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 5)))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (5))))
     (length = 15) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
        (App
         (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
          (App (App (Var b) (App (Var mul) (Var 2)))
           (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-        (Var 5)))))
+        (Num 5)))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 4))))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 4))))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (4)))))
     (length = 19) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
         (App
          (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
           (App (App (Var b) (App (Var mul) (Var 2)))
            (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-         (Var 4))))))
+         (Num 4))))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 3)))))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 3)))))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (3))))))
     (length = 23) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2))
          (App
           (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
            (App (App (Var b) (App (Var mul) (Var 2)))
             (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-          (Var 3)))))))
+          (Num 3)))))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2))
-         (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 2))))))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2))
+         (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 2))))))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (2)))))))
     (length = 27) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2))
-         (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2))
+         (App (App (Var mul) (Num 2))
           (App
            (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
             (App (App (Var b) (App (Var mul) (Var 2)))
              (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-           (Var 2))))))))
+           (Num 2))))))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2))
-         (App (App (Var mul) (Var 2))
-          (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 1)))))))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2))
+         (App (App (Var mul) (Num 2))
+          (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 1)))))))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (1))))))))
     (length = 31) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2))
-         (App (App (Var mul) (Var 2))
-          (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2))
+         (App (App (Var mul) (Num 2))
+          (App (App (Var mul) (Num 2))
            (App
             (App (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
              (App (App (Var b) (App (Var mul) (Var 2)))
               (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-            (Var 1)))))))))
+            (Num 1)))))))))
     Reduced:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2))
-         (App (App (Var mul) (Var 2))
-          (App (App (Var mul) (Var 2))
-           (App (App (Var mul) (Var 2)) (App (Var pwr2) (Var 0))))))))))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2))
+         (App (App (Var mul) (Num 2))
+          (App (App (Var mul) (Num 2))
+           (App (App (Var mul) (Num 2)) (App (Var pwr2) (Num 0))))))))))
+    Reduced hum:
+    ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap (ap "mul" (2)) (ap "pwr2" (0)))))))))
     (length = 35) Eval_custom loop
     Substituting pwr2
     Expanded:
-    (App (App (Var mul) (Var 2))
-     (App (App (Var mul) (Var 2))
-      (App (App (Var mul) (Var 2))
-       (App (App (Var mul) (Var 2))
-        (App (App (Var mul) (Var 2))
-         (App (App (Var mul) (Var 2))
-          (App (App (Var mul) (Var 2))
-           (App (App (Var mul) (Var 2))
+    (App (App (Var mul) (Num 2))
+     (App (App (Var mul) (Num 2))
+      (App (App (Var mul) (Num 2))
+       (App (App (Var mul) (Num 2))
+        (App (App (Var mul) (Num 2))
+         (App (App (Var mul) (Num 2))
+          (App (App (Var mul) (Num 2))
+           (App (App (Var mul) (Num 2))
             (App
              (App
               (App (Var s) (App (App (Var c) (App (Var eq) (Var 0))) (Var 1)))
               (App (App (Var b) (App (Var mul) (Var 2)))
                (App (App (Var b) (Var pwr2)) (App (Var add) (Var -1)))))
-             (Var 0))))))))))
+             (Num 0))))))))))
     Reduced:
-    (Var 256)
+    (Num 256)
+    Reduced hum:
+    256
     (length = 1) Eval_custom loop
     Expanded:
-    (Var 256)
+    (Num 256)
     Reduced:
-    (Var 256)
-    Result: "256" |}];
+    (Num 256)
+    Reduced hum:
+    256
+    Result: 256 |}];
   test "ap f2048 42";
   [%expect
     {|
@@ -1132,13 +1230,17 @@ let%expect_test "eval" =
     Expanded:
     (App (App (Var f) (Var f2048)) (Var 42))
     Reduced:
-    (Var 42)
+    (Num 42)
+    Reduced hum:
+    42
     (length = 1) Eval_custom loop
     Expanded:
-    (Var 42)
+    (Num 42)
     Reduced:
-    (Var 42)
-    Result: "42" |}];
+    (Num 42)
+    Reduced hum:
+    42
+    Result: 42 |}];
   test "ap ap ap s add inc 1";
   [%expect {|
     Eval (length: 7): ap (ap (ap "s" "add") "inc") "1"
@@ -1146,13 +1248,17 @@ let%expect_test "eval" =
     Expanded:
     (App (App (App (Var s) (Var add)) (Var inc)) (Var 1))
     Reduced:
-    (Var 3)
+    (Num 3)
+    Reduced hum:
+    3
     (length = 1) Eval_custom loop
     Expanded:
-    (Var 3)
+    (Num 3)
     Reduced:
-    (Var 3)
-    Result: "3" |}];
+    (Num 3)
+    Reduced hum:
+    3
+    Result: 3 |}];
   test "ap ap ap c x y ap ap add 1 2";
   [%expect
     {|
@@ -1162,13 +1268,17 @@ let%expect_test "eval" =
     (App (App (App (Var c) (Var x)) (Var y))
      (App (App (Var add) (Var 1)) (Var 2)))
     Reduced:
-    (App (App (Var x) (Var 3)) (Var y))
+    (App (App (Var x) (Num 3)) (Var y))
+    Reduced hum:
+    ap (ap "x" (3)) "y"
     (length = 5) Eval_custom loop
     Expanded:
-    (App (App (Var x) (Var 3)) (Var y))
+    (App (App (Var x) (Num 3)) (Var y))
     Reduced:
-    (App (App (Var x) (Var 3)) (Var y))
-    Result: ap (ap "x" "3") "y" |}];
+    (App (App (Var x) (Num 3)) (Var y))
+    Reduced hum:
+    ap (ap "x" (3)) "y"
+    Result: ap (ap "x" (3)) "y" |}];
   test "ap ap statelessdraw x0 x1";
   [%expect
     {|
@@ -1191,16 +1301,18 @@ let%expect_test "eval" =
       (Var x0))
      (Var x1))
     Reduced:
-    (App (App (Var cons) (Var 0))
+    (App (App (Var cons) (Num 0))
      (App (App (Var cons) (Var x0))
       (App
        (App (Var cons)
         (App (App (Var cons) (App (App (Var cons) (Var x1)) (Var nil)))
          (Var nil)))
        (Var nil))))
+    Reduced hum:
+    ap (ap "cons" (0)) (ap (ap "cons" "x0") (ap (ap "cons" (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")) "nil"))
     (length = 21) Eval_custom loop
     Expanded:
-    (App (App (Var cons) (Var 0))
+    (App (App (Var cons) (Num 0))
      (App (App (Var cons) (Var x0))
       (App
        (App (Var cons)
@@ -1208,13 +1320,15 @@ let%expect_test "eval" =
          (Var nil)))
        (Var nil))))
     Reduced:
-    (App (App (Var cons) (Var 0))
+    (App (App (Var cons) (Num 0))
      (App (App (Var cons) (Var x0))
       (App
        (App (Var cons)
         (App (App (Var cons) (App (App (Var cons) (Var x1)) (Var nil)))
          (Var nil)))
        (Var nil))))
-    Result: ap (ap "cons" "0") (ap (ap "cons" "x0") (ap (ap "cons" (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")) "nil"))
+    Reduced hum:
+    ap (ap "cons" (0)) (ap (ap "cons" "x0") (ap (ap "cons" (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")) "nil"))
+    Result: ap (ap "cons" (0)) (ap (ap "cons" "x0") (ap (ap "cons" (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")) "nil"))
   |}]
 ;;
