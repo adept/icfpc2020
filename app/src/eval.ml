@@ -75,10 +75,11 @@ let rec to_string_hum = function
 ;;
 
 (* Decode multidraw vector: list of lists of coordinate pairs *)
-let decode_vector t : (Big_int.t * Big_int.t) list list =
+let decode_vector t : (int * int) list list =
   let decode_pair t =
     match t with
-    | App (App (Var "cons", Num x), Num y) -> x, y
+    | App (App (Var "cons", Num x), Num y) ->
+      Big_int_Z.int_of_big_int x, Big_int_Z.int_of_big_int y
     | x -> failwithf !"pair: %{sexp:t}" x ()
   in
   let _ = decode_pair in

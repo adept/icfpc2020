@@ -26,7 +26,7 @@ val load_defs_exn : filename:string -> t String.Map.t
 val car : t -> t
 
 val cdr : t -> t
-val decode_vector : t -> (Big_int.t * Big_int.t) list list
+val decode_vector : t -> (int * int) list list
 
 (** Parsing *)
 

@@ -5,6 +5,7 @@
   cohttp-lwt-unix
   lambda
   zarith
+  graphics
   )
  (inline_tests)
  (preprocess (
