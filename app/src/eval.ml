@@ -86,6 +86,7 @@ let reduce_maximally t =
     | App (Var "i", arg1) -> arg1
     | App (Var "car", App (App (Var "cons", arg1), _)) -> arg1
     | App (Var "cdr", App (App (Var "cons", _), arg2)) -> arg2
+    (* inc and dec *)
     | App (Var "inc", Var x) when is_int x -> Var (Int.to_string (Int.of_string x + 1))
     | App (Var "dec", Var x) when is_int x -> Var (Int.to_string (Int.of_string x - 1))
     (* inc (dec) and dec (inc) *)
@@ -103,6 +104,8 @@ let reduce_maximally t =
     (* add 0 *)
     | App (App (Var "add", x), Var "0") -> x
     | App (App (Var "add", Var "0"), x) -> x
+    | App (Var "add", Var "-1") -> Var "dec"
+    | App (Var "add", Var "1") -> Var "inc"
     (* arithmetics *)
     | App (App (Var "add", Var x), Var y) when is_int x && is_int y ->
       Var (Int.to_string (Int.of_string x + Int.of_string y))
@@ -117,8 +120,10 @@ let reduce_maximally t =
     | App (App (Var "mul", Var "0"), _) -> Var "0"
     | App (Var "neg", Var x) when is_int x ->
       Var (Int.to_string (Int.neg (Int.of_string x)))
+    (* eq *)
     | App (App (Var "eq", Var arg1), Var arg2) ->
       if String.equal arg1 arg2 then Var "t" else Var "f"
+    (*lt*)
     | App (App (Var "lt", Var x), Var y) when is_int x && is_int y ->
       if Int.( < ) (Int.of_string x) (Int.of_string y) then Var "t" else Var "f"
     | App (Var "isnil", Var "nil") -> Var "t"
