@@ -163,11 +163,11 @@ let eval_custom ~verbose ~defs =
         match t with
         | Arg1 (n, t) -> Arg1 (n, expand_once t)
         | Arg2 (n, t1, t2) ->
-          (match expand_once t2 with
-          | t2' when not (equal t2 t2') -> Arg2 (n, t1, t2')
+          (match expand_once t1 with
+          | t1' when not (equal t1 t1') -> Arg2 (n, t1', t2)
           | _ ->
-            (match expand_once t1 with
-            | t1' when not (equal t1 t1') -> Arg2 (n, t1', t2)
+            (match expand_once t2 with
+            | t2' when not (equal t2 t2') -> Arg2 (n, t1, t2')
             | _ -> t))
         | Var name ->
           (match Map.find defs name with
@@ -177,11 +177,11 @@ let eval_custom ~verbose ~defs =
             (* if verbose then printf !"Substituting %s => %{sexp: t}\n%!" name expansion; *)
             expansion)
         | App (t1, t2) ->
-          (match expand_once t2 with
-          | t2' when not (equal t2 t2') -> App (t1, t2')
+          (match expand_once t1 with
+          | t1' when not (equal t1 t1') -> App (t1', t2)
           | _ ->
-            (match expand_once t1 with
-            | t1' when not (equal t1 t1') -> App (t1', t2)
+            (match expand_once t2 with
+            | t2' when not (equal t2 t2') -> App (t1, t2')
             | _ -> t))
       in
       let rec reduce_fix t =
