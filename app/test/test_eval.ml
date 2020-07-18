@@ -170,13 +170,6 @@ let%expect_test "eval" =
     Eval: ap "f2048" "42"
     Free vars: (f2048 42)
     Substituting f2048 => (App (Var f) (Var f2048))
-<<<<<<< HEAD
-=======
-    Eval: ap (ap "f" "f2048") "42"
-    Free vars: (f f2048 42)
-    Substituting f => (Abs (x (Abs (y (Var y)))))
-    Substituting f2048 => (App (Var f) (Var f2048))
->>>>>>> f23bf51... Fix evaluation to continue if anything has changed
     Eval: "42"
     Free vars: (42)
     Result: "42" |}];
@@ -197,16 +190,10 @@ let%expect_test "eval" =
     {|
     Eval: ap (ap (ap "c" "x") "y") (ap (ap "add" "1") "2")
     Free vars: (c x y add 1 2)
-<<<<<<< HEAD
     Eval: ap (ap "x" (ap (ap "add" "1") "2")) "y"
     Free vars: (x add 1 2 y)
     Eval: ap (ap "x" "3") "y"
     Free vars: (x 3 y)
-=======
-    Substituting c => (Abs (x (Abs (y (Abs (z (App (App (Var x) (Var z)) (Var y))))))))
-    Eval: ap (ap "x" (ap (ap "add" "1") "2")) "y"
-    Free vars: (x add 1 2 y)
->>>>>>> f23bf51... Fix evaluation to continue if anything has changed
     Result: ap (ap "x" "3") "y" |}];
   test "ap ap statelessdraw x0 x1";
   [%expect
@@ -223,7 +210,6 @@ let%expect_test "eval" =
       (App (Var c)
        (App (App (Var b) (Var cons)) (App (App (Var c) (Var cons)) (Var nil))))
       (Var nil)))
-<<<<<<< HEAD
     Eval: ap (ap (ap (ap (ap "b" "b") (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil")))) "x0") (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")) "x1"
     Free vars: (0 x0 b c cons nil x1)
     Eval: ap (ap (ap "b" (ap (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))) "x0")) (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")) "x1"
@@ -242,16 +228,6 @@ let%expect_test "eval" =
     Free vars: (0 x0 c cons x1 nil)
     Eval: ap (ap "cons" "0") (ap (ap "cons" "x0") (ap (ap "cons" (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")) "nil"))
     Free vars: (0 x0 cons x1 nil)
-    Result: ap (ap "cons" "0") (ap (ap "cons" "x0") (ap (ap "cons" (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")) "nil")) |}]
-=======
-    Eval: ap (ap (ap (ap "c" (ap (ap "b" "b") (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))))) (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")) "x0") "x1"
-    Free vars: (0 b c cons nil x0 x1)
-    Substituting b => (Abs (x (Abs (y (Abs (z (App (Var x) (App (Var y) (Var z)))))))))
-    Substituting c => (Abs (x (Abs (y (Abs (z (App (App (Var x) (Var z)) (Var y))))))))
-    Substituting cons => (Abs (x (Abs (y (Abs (m (App (App (Var m) (Var x)) (Var y))))))))
-    Substituting nil => (Abs (z (Abs (p (Abs (q (Var p)))))))
-    Eval: \m -> ap (ap "m" "0") (\m -> ap (ap "m" "x0") (\m -> ap (ap "m" (\m -> ap (ap "m" (\m -> ap (ap "m" "x1") (\z -> \p -> \q -> "p"))) (\z -> \p -> \q -> "p"))) (\z -> \p -> \q -> "p")))
-    Free vars: (0 x0 x1)
-    Result: \m -> ap (ap "m" "0") (\m -> ap (ap "m" "x0") (\m -> ap (ap "m" (\m -> ap (ap "m" (\m -> ap (ap "m" "x1") (\z -> \p -> \q -> "p"))) (\z -> \p -> \q -> "p"))) (\z -> \p -> \q -> "p"))) |}]
->>>>>>> f23bf51... Fix evaluation to continue if anything has changed
+    Result: ap (ap "cons" "0") (ap (ap "cons" "x0") (ap (ap "cons" (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")) "nil"))
+      |}]
 ;;
