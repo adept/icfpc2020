@@ -1,24 +1,18 @@
 open! Core
+module Id = Unique_id.Int ()
 
-module T = struct
-  module U = struct
-    type t = Lambda.L.term =
-      | Var of string
-      | Abs of (string * t)
-      | App of t * t
-    [@@deriving compare, equal, sexp]
-  end
-
-  include U
-  include Comparable.Make (U)
-end
-
-include T.U
+type t =
+  | Var of string
+  | Abs of (string * t)
+  | App of t * t
+  | With_id of Id.t * t
+[@@deriving equal, sexp]
 
 let rec length = function
   | Var _ -> 1
   | Abs (_, t) -> 1 + length t
   | App (t1, t2) -> 1 + length t1 + length t2
+  | With_id (_, t) -> length t
 ;;
 
 let rec to_string_hum = function
@@ -31,6 +25,7 @@ let rec to_string_hum = function
     in
     sprintf "ap %s %s" (str_of_arg x) (str_of_arg y)
   | Abs (x, term) -> sprintf "\\%s -> %s" x (to_string_hum term)
+  | With_id (id, t) -> sprintf !"%{Id}: %s" id (to_string_hum t)
 ;;
 
 let parse ws =
@@ -97,14 +92,29 @@ let reduce t =
     | App (App (App (Var "c", arg1), arg2), arg3) -> App (App (arg1, arg3), arg2)
     | App (App (App (Var "b", arg1), arg2), arg3) -> App (arg1, App (arg2, arg3))
     | App (App (App (Var "s", arg1), arg2), arg3) ->
+      let arg3 =
+        match arg3 with
+        | Var _ | Abs _ | With_id _ -> arg3
+        | App _ ->
+          let id = Id.create () in
+          With_id (id, arg3)
+      in
       App (App (arg1, arg3), App (arg2, arg3))
     | App (Var "i", arg1) -> arg1
-    | App (Var "car", App (App (Var "cons", arg1), _)) -> arg1
-    | App (Var "cdr", App (App (Var "cons", _), arg2)) -> arg2
+    | App
+        ( Var "car"
+        , (App (App (Var "cons", arg1), _) | With_id (_, App (App (Var "cons", arg1), _)))
+        ) -> arg1
+    | App
+        ( Var "cdr"
+        , (App (App (Var "cons", _), arg2) | With_id (_, App (App (Var "cons", _), arg2)))
+        ) -> arg2
     | App (Var "inc", Var x) when is_int x -> Var (Int.to_string (Int.of_string x + 1))
     | App (Var "dec", Var x) when is_int x -> Var (Int.to_string (Int.of_string x - 1))
-    | App (Var "inc", App (Var "dec", Var x)) -> Var x
-    | App (Var "dec", App (Var "inc", Var x)) -> Var x
+    | App (Var "inc", (App (Var "dec", Var x) | With_id (_, App (Var "dec", Var x)))) ->
+      Var x
+    | App (Var "dec", (App (Var "inc", Var x) | With_id (_, App (Var "inc", Var x)))) ->
+      Var x
     | App (App (Var "add", Var x), Var y) when is_int x && is_int y ->
       Var (Int.to_string (Int.of_string x + Int.of_string y))
     | App (App (Var "div", Var x), Var y) when is_int x && is_int y ->
@@ -140,28 +150,23 @@ let reduce t =
     raise exn
 ;;
 
-let subst t ~verbose ~defs =
-  let free_vars = Lambda.L.fv_l t in
-  if verbose then printf !"Free vars: %{sexp: string list}\n" free_vars;
-  List.fold free_vars ~init:t ~f:(fun acc free_var ->
-      match Map.find defs free_var with
-      | None -> acc
-      | Some definition ->
-        if verbose then printf !"Substituting %s => %{sexp: t}\n" free_var definition;
-        Lambda.L.subst free_var definition acc)
-;;
-
-let rec eval t ~verbose ~defs =
-  if verbose then printf "Eval: %s\n" (to_string_hum t);
-  let t' = subst ~verbose ~defs t in
-  let t' = reduce t' in
-  if equal t' t then t' else eval t' ~verbose ~defs
-;;
-
 (** [eval_custom] is like [eval] but 1) only expands the left+inner-most leaf,
    and 2) memoizes results. *)
 let eval_custom ~verbose ~defs =
-  let reduce = Memo.of_comparable (module T) reduce in
+  let cache = Id.Table.create () in
+  let rec reduce_memo t =
+    match t with
+    | Var _ | Abs _ -> reduce t
+    (* | App (t1, t2) -> reduce (App (reduce t1, reduce t2)) *)
+    | App (t1, t2) -> reduce (App (reduce_memo t1, reduce_memo t2))
+    | With_id (id, t3) ->
+      (match Hashtbl.find cache id with
+      | Some res -> With_id (id, res)
+      | None ->
+        let res = reduce_memo t3 in
+        Hashtbl.set cache ~key:id ~data:res;
+        With_id (id, res))
+  in
   Staged.stage (fun t ->
       if verbose then printf "Eval (length: %d): %s\n%!" (length t) (to_string_hum t);
       let rec expand_once t =
@@ -170,22 +175,26 @@ let eval_custom ~verbose ~defs =
           (match Map.find defs name with
           | None -> t
           | Some expansion ->
-            if verbose then printf !"Substituting %s => %{sexp: t}\n%!" name expansion;
-            reduce expansion)
+            (* if verbose then printf !"Substituting %s => %{sexp: t}\n%!" name expansion; *)
+            expansion)
         | Abs _ -> t
         | App (t1, t2) ->
           (match expand_once t1 with
-          | t1' when not (equal t1 t1') -> reduce (App (t1', t2))
+          | t1' when not (equal t1 t1') -> App (t1', t2)
           | _ ->
             (match expand_once t2 with
-            | t2' when not (equal t2 t2') -> reduce (App (t1, t2'))
+            | t2' when not (equal t2 t2') -> App (t1, t2')
             | _ -> t))
+        | With_id (id, t) ->
+          (match expand_once t with
+          | t' when not (equal t t') -> With_id (id, t')
+          | _ -> t)
       in
       let rec loop t =
-        (* if verbose
-         * then printf "(length = %d) Eval_custom loop: %s\n%!" (length t) (to_string_hum t);
-         * let (_ : string) = In_channel.input_line_exn In_channel.stdin in *)
-        let t' = reduce (expand_once t) in
+        (* if verbose then printf "(length = %d) Eval_custom loop\n%!" (length t);
+         * if verbose then printf "Eval_custom loop: %s\n%!" (to_string_hum t); *)
+        (* let (_ : string) = In_channel.input_line_exn In_channel.stdin in *)
+        let t' = reduce_memo (expand_once t) in
         if equal t' t then t else loop t'
       in
       loop t)

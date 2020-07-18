@@ -28,7 +28,7 @@ let defs =
   |> List.map ~f:Eval.parse_def_exn
   |> List.fold_left ~init:Eval.base_defs ~f:(fun acc (key, data) ->
          Map.set acc ~key ~data)
-  |> Map.set ~key:"f2048" ~data:(Lambda.Parse.parse "(f f2048)")
+  |> Map.set ~key:"f2048" ~data:(Eval.App (Var "f", Var "f2048"))
 ;;
 
 let%expect_test "base combinators" =
@@ -173,11 +173,9 @@ let%expect_test "eval" =
     f2048 := ap "f" "f2048"
     statelessdraw := ap (ap "c" (ap (ap "b" "b") (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))))) (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")
     Eval (length: 3): ap "f2048" "42"
-    Substituting f2048 => (App (Var f) (Var f2048))
     Result: "42" |}];
   test "ap ap ap s add inc 1";
-  [%expect
-    {|
+  [%expect {|
     Eval (length: 7): ap (ap (ap "s" "add") "inc") "1"
     Result: "3" |}];
   test "ap ap ap c x y ap ap add 1 2";
@@ -189,16 +187,6 @@ let%expect_test "eval" =
   [%expect
     {|
     Eval (length: 5): ap (ap "statelessdraw" "x0") "x1"
-    Substituting statelessdraw => (App
-     (App (Var c)
-      (App (App (Var b) (Var b))
-       (App (App (Var b) (App (Var b) (App (Var cons) (Var 0))))
-        (App (App (Var c) (App (App (Var b) (Var b)) (Var cons)))
-         (App (App (Var c) (Var cons)) (Var nil))))))
-     (App
-      (App (Var c)
-       (App (App (Var b) (Var cons)) (App (App (Var c) (Var cons)) (Var nil))))
-      (Var nil)))
     Result: ap (ap "cons" "0") (ap (ap "cons" "x0") (ap (ap "cons" (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")) "nil"))
   |}]
 ;;
