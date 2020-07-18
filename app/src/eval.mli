@@ -5,7 +5,6 @@ type t =
   | Var of string
   | Arg1 of string * t
   | Arg2 of string * t * t
-  | Arg3 of string * t * t * t
   | App of t * t
 [@@deriving equal, sexp]
 

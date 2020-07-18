@@ -5,7 +5,6 @@ type t =
   | Var of string
   | Arg1 of string * t
   | Arg2 of string * t * t
-  | Arg3 of string * t * t * t
   | App of t * t
 [@@deriving sexp]
 
@@ -16,8 +15,6 @@ let rec equal t1 t2 =
   | Arg1 (n1, x1), Arg1 (n2, y1) -> String.equal n1 n2 && equal x1 y1
   | Arg2 (n1, x1, x2), Arg2 (n2, y1, y2) ->
     String.equal n1 n2 && equal x1 y1 && equal x2 y2
-  | Arg3 (n1, x1, x2, x3), Arg3 (n2, y1, y2, y3) ->
-    String.equal n1 n2 && equal x1 y1 && equal x2 y2 && equal x3 y3
   | _, _ -> false
 ;;
 
@@ -26,15 +23,12 @@ let rec length = function
   | App (t1, t2) -> 1 + length t1 + length t2
   | Arg1 (_, t1) -> 1 + length t1
   | Arg2 (_, t1, t2) -> 1 + length t1 + length t2
-  | Arg3 (_, t1, t2, t3) -> 1 + length t1 + length t2 + length t3
 ;;
 
 let rec to_string_hum = function
   | Var name -> sprintf {|"%s"|} name
   | Arg1 (n, x) -> sprintf {|[%s %s]|} n (to_string_hum x)
   | Arg2 (n, x, y) -> sprintf {|[%s %s %s]|} n (to_string_hum x) (to_string_hum y)
-  | Arg3 (n, x, y, z) ->
-    sprintf {|[%s %s %s %s]|} n (to_string_hum x) (to_string_hum y) (to_string_hum z)
   | App (x, y) ->
     let str_of_arg arg =
       match arg with
@@ -146,7 +140,6 @@ let reduce_maximally t =
     (* Descent *)
     | Arg1 (n, t1) -> Arg1 (n, step t1)
     | Arg2 (n, t1, t2) -> Arg2 (n, step t1, step t2)
-    | Arg3 (n, t1, t2, t3) -> Arg3 (n, step t1, step t2, step t3)
     | App (arg1, arg2) ->
       App (step arg1, step arg2)
       (* (match t with
@@ -176,16 +169,6 @@ let eval_custom ~verbose ~defs =
             (match expand_once t2 with
             | t2' when not (equal t2 t2') -> Arg2 (n, t1, t2')
             | _ -> t))
-        | Arg3 (n, t1, t2, t3) ->
-          (match expand_once t1 with
-          | t1' when not (equal t1 t1') -> Arg3 (n, t1', t2, t3)
-          | _ ->
-            (match expand_once t2 with
-            | t2' when not (equal t2 t2') -> Arg3 (n, t1, t2', t3)
-            | _ ->
-              (match expand_once t3 with
-              | t3' when not (equal t3 t3') -> Arg3 (n, t1, t2, t3')
-              | _ -> t)))
         | Var name ->
           (match Map.find defs name with
           | None -> t
