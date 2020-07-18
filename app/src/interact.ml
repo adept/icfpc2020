@@ -33,6 +33,9 @@ let get_click () =
   let x = (status.G.mouse_x / pixel_size) - pixel_shift in
   let y = (status.G.mouse_y / pixel_size) - pixel_shift in
   printf "clicked: (%d,%d) => (%d,%d)\n%!" status.G.mouse_x status.G.mouse_y x y;
+  G.moveto 20 10;
+  G.set_color G.black;
+  G.draw_string "Computing...";
   x, y
 ;;
 
