@@ -18,9 +18,9 @@ let rec interact ~protocol ~state ~vector ~eval =
   interact ~protocol ~state ~vector ~eval
 ;;
 
-let run ~filename =
+let run ~filename ~protocol ~state ~vector =
   let defs = Eval.load_defs_exn ~filename in
   let p str = Eval.parse_exn (String.split ~on:' ' str) in
   let eval = Eval.eval_custom ~verbose:true ~defs |> Staged.unstage in
-  interact ~protocol:(p "galaxy") ~state:(p "nil") ~vector:(p "ap ap cons 0 0") ~eval
+  interact ~protocol:(p protocol) ~state:(p state) ~vector:(p vector) ~eval
 ;;

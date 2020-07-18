@@ -1,3 +1,3 @@
 open! Core
 
-val run : filename:string -> unit
+val run : filename:string -> protocol:string -> state:string -> vector:string -> unit
