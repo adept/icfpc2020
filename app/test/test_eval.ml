@@ -66,6 +66,8 @@ let%expect_test "base combinators" =
   test "ap ap mul x0 x1";
   test "ap ap mul x0 0";
   test "ap ap mul x0 1";
+  test "ap ap mul 0 x0";
+  test "ap ap mul 1 x0";
   test "ap ap ap s x0 x1 x2";
   test "ap ap ap s add inc 1";
   test "ap ap ap s mul ap add 1 6";
@@ -131,6 +133,10 @@ let%expect_test "base combinators" =
     Result: "0"
     Starting evaluation: ap ap mul x0 1
     Result: "x0"
+    Starting evaluation: ap ap mul 0 x0
+    Result: "0"
+    Starting evaluation: ap ap mul 1 x0
+    Result: "x0"
     Starting evaluation: ap ap ap s x0 x1 x2
     Result: ap (ap "x0" "x2") (ap "x1" "x2")
     Starting evaluation: ap ap ap s add inc 1
@@ -168,7 +174,8 @@ let%expect_test "eval" =
     Free vars: (42)
     Result: "42" |}];
   test "ap ap ap s add inc 1";
-  [%expect {|
+  [%expect
+    {|
     Eval: ap (ap (ap "s" "add") "inc") "1"
     Free vars: (s add inc 1)
     Eval: ap (ap "add" "1") (ap "inc" "1")
