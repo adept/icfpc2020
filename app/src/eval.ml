@@ -194,6 +194,7 @@ let eval_custom ~verbose ~defs =
         if verbose then printf !"Expanded:\n%{sexp: t}\n%!" t';
         let t' = reduce_fix t' in
         if verbose then printf !"Reduced:\n%{sexp: t}\n%!" t';
+        if verbose then printf !"Reduced hum:\n%s\n%!" (to_string_hum t');
         if equal t' t
         then t
         else (
