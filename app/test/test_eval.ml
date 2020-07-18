@@ -173,20 +173,94 @@ let%expect_test "eval" =
     f2048 := ap "f" "f2048"
     statelessdraw := ap (ap "c" (ap (ap "b" "b") (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))))) (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")
     Eval (length: 3): ap "f2048" "42"
+    (length = 3) Eval_custom loop
+    Substituting f2048
+    Expanded:
+    (App (App (Var f) (Var f2048)) (Var 42))
+    Reduced:
+    (Var 42)
+    (length = 1) Eval_custom loop
+    Expanded:
+    (Var 42)
+    Reduced:
+    (Var 42)
     Result: "42" |}];
   test "ap ap ap s add inc 1";
   [%expect {|
     Eval (length: 7): ap (ap (ap "s" "add") "inc") "1"
+    (length = 7) Eval_custom loop
+    Expanded:
+    (App (App (App (Var s) (Var add)) (Var inc)) (Var 1))
+    Reduced:
+    (Var 3)
+    (length = 1) Eval_custom loop
+    Expanded:
+    (Var 3)
+    Reduced:
+    (Var 3)
     Result: "3" |}];
   test "ap ap ap c x y ap ap add 1 2";
   [%expect
     {|
     Eval (length: 11): ap (ap (ap "c" "x") "y") (ap (ap "add" "1") "2")
+    (length = 11) Eval_custom loop
+    Expanded:
+    (App (App (App (Var c) (Var x)) (Var y))
+     (App (App (Var add) (Var 1)) (Var 2)))
+    Reduced:
+    (App (App (Var x) (Var 3)) (Var y))
+    (length = 5) Eval_custom loop
+    Expanded:
+    (App (App (Var x) (Var 3)) (Var y))
+    Reduced:
+    (App (App (Var x) (Var 3)) (Var y))
     Result: ap (ap "x" "3") "y" |}];
   test "ap ap statelessdraw x0 x1";
   [%expect
     {|
     Eval (length: 5): ap (ap "statelessdraw" "x0") "x1"
+    (length = 5) Eval_custom loop
+    Substituting statelessdraw
+    Expanded:
+    (App
+     (App
+      (App
+       (App (Var c)
+        (App (App (Var b) (Var b))
+         (App (App (Var b) (App (Var b) (App (Var cons) (Var 0))))
+          (App (App (Var c) (App (App (Var b) (Var b)) (Var cons)))
+           (App (App (Var c) (Var cons)) (Var nil))))))
+       (App
+        (App (Var c)
+         (App (App (Var b) (Var cons)) (App (App (Var c) (Var cons)) (Var nil))))
+        (Var nil)))
+      (Var x0))
+     (Var x1))
+    Reduced:
+    (App (App (Var cons) (Var 0))
+     (App (App (Var cons) (Var x0))
+      (App
+       (App (Var cons)
+        (App (App (Var cons) (App (App (Var cons) (Var x1)) (Var nil)))
+         (Var nil)))
+       (Var nil))))
+    (length = 21) Eval_custom loop
+    Expanded:
+    (App (App (Var cons) (Var 0))
+     (App (App (Var cons) (Var x0))
+      (App
+       (App (Var cons)
+        (App (App (Var cons) (App (App (Var cons) (Var x1)) (Var nil)))
+         (Var nil)))
+       (Var nil))))
+    Reduced:
+    (App (App (Var cons) (Var 0))
+     (App (App (Var cons) (Var x0))
+      (App
+       (App (Var cons)
+        (App (App (Var cons) (App (App (Var cons) (Var x1)) (Var nil)))
+         (Var nil)))
+       (Var nil))))
     Result: ap (ap "cons" "0") (ap (ap "cons" "x0") (ap (ap "cons" (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")) "nil"))
   |}]
 ;;
