@@ -43,6 +43,12 @@ let parse_def_exn str =
   | _ -> failwithf "Could not parse def from: '%s'" str ()
 ;;
 
+let load_defs_exn ~filename =
+  let contents = In_channel.read_all filename in
+  let defs = List.map (String.split_lines contents) ~f:parse_def_exn in
+  String.Map.of_alist_exn defs
+;;
+
 let base_defs =
   String.Map.empty
   (* C x y z = x z y *)
