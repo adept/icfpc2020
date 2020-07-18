@@ -1,18 +1,31 @@
 open! Core
 module Id : Unique_id.Id
 
+module Big_int : sig
+  open! Big_int_Z
+
+  type t = Z.t
+
+  val zero : t
+  val is_zero : t -> bool
+end
+
 type t =
+  | Nil
+  | True
+  | False
   | Var of string
-  | Num of int
-  | Arg1 of string * t
-  | Arg2 of string * t * t
+  | Num of Big_int.t
   | App of t * t
 [@@deriving equal, sexp]
 
-val car : t -> t
-val cdr : t -> t
 val to_string_hum : t -> string
 val load_defs_exn : filename:string -> t String.Map.t
+
+(** List-like access *)
+val car : t -> t
+
+val cdr : t -> t
 
 (** Parsing *)
 

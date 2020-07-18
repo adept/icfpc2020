@@ -4,6 +4,7 @@
   core
   cohttp-lwt-unix
   lambda
+  zarith
   )
  (inline_tests)
  (preprocess (
