@@ -187,8 +187,8 @@ let eval_custom ~verbose ~defs =
           | _ -> t)
       in
       let rec loop t =
-        (* if verbose then printf "(length = %d) Eval_custom loop\n%!" (length t);
-         * if verbose then printf "Eval_custom loop: %s\n%!" (to_string_hum t); *)
+        (* if verbose then printf "(length = %d) Eval_custom loop\n%!" (length t); *)
+        (* if verbose then printf "Eval_custom loop: %s\n%!" (to_string_hum t); *)
         (* let (_ : string) = In_channel.input_line_exn In_channel.stdin in *)
         let t' = reduce_memo (expand_once t) in
         if equal t' t then t else loop t'
