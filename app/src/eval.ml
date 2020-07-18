@@ -101,6 +101,8 @@ let reduce t =
       Var (Int.to_string (Int.of_string x * Int.of_string y))
     | App (App (Var "mul", Var x), Var "1") -> Var x
     | App (App (Var "mul", Var _), Var "0") -> Var "0"
+    | App (App (Var "mul", Var "1"), Var x) -> Var x
+    | App (App (Var "mul", Var "0"), _) -> Var "0"
     | App (Var "neg", Var x) when is_int x ->
       Var (Int.to_string (Int.neg (Int.of_string x)))
     | App (App (Var "eq", Var arg1), Var arg2) ->
