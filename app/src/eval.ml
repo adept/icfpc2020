@@ -79,8 +79,22 @@ let reduce_maximally t =
     | App (Var "cdr", App (App (Var "cons", _), arg2)) -> arg2
     | App (Var "inc", Var x) when is_int x -> Var (Int.to_string (Int.of_string x + 1))
     | App (Var "dec", Var x) when is_int x -> Var (Int.to_string (Int.of_string x - 1))
+    (* inc (dec) and dec (inc) *)
     | App (Var "inc", App (Var "dec", Var x)) -> Var x
     | App (Var "dec", App (Var "inc", Var x)) -> Var x
+    (* inc (add) and dec (add) *)
+    | App (Var "dec", App (App (Var "add", Var x), y)) when is_int x ->
+      App (App (Var "add", Var (Int.to_string (Int.of_string x - 1))), y)
+    | App (Var "dec", App (App (Var "add", y), Var x)) when is_int x ->
+      App (App (Var "add", y), Var (Int.to_string (Int.of_string x - 1)))
+    | App (Var "inc", App (App (Var "add", Var x), y)) when is_int x ->
+      App (App (Var "add", Var (Int.to_string (Int.of_string x + 1))), y)
+    | App (Var "inc", App (App (Var "add", y), Var x)) when is_int x ->
+      App (App (Var "add", y), Var (Int.to_string (Int.of_string x + 1)))
+    (* add 0 *)
+    | App (App (Var "add", x), Var "0") -> x
+    | App (App (Var "add", Var "0"), x) -> x
+    (* arithmetics *)
     | App (App (Var "add", Var x), Var y) when is_int x && is_int y ->
       Var (Int.to_string (Int.of_string x + Int.of_string y))
     | App (App (Var "div", Var x), Var y) when is_int x && is_int y ->
@@ -99,6 +113,9 @@ let reduce_maximally t =
     | App (App (Var "lt", Var x), Var y) when is_int x && is_int y ->
       if Int.( < ) (Int.of_string x) (Int.of_string y) then Var "t" else Var "f"
     | App (Var "isnil", Var "nil") -> Var "t"
+    | App (App (App (Var "if0", Var "0"), then_branch), _else_branch) -> then_branch
+    | App (App (App (Var "if0", Var x), _then_branch), else_branch)
+      when is_int x && Int.of_string x <> 0 -> else_branch
     | App (arg1, arg2) ->
       let t = App (step arg1, step arg2) in
       (match t with
