@@ -46,19 +46,19 @@ let parse_def_exn str =
 let base_defs =
   String.Map.empty
   (* C x y z = x z y *)
-  |> Map.set ~key:"c" ~data:(Lambda.Parse.parse "(/x./y./z.x z y)")
+  (* |> Map.set ~key:"c" ~data:(Lambda.Parse.parse "(/x./y./z.x z y)") *)
   (* B x y z = x (y z)) *)
-  |> Map.set ~key:"b" ~data:(Lambda.Parse.parse "(/x./y./z.x (y z))")
+  (* |> Map.set ~key:"b" ~data:(Lambda.Parse.parse "(/x./y./z.x (y z))") *)
   (*cons: λh.λt.(λs.s h t) *)
-  |> Map.set ~key:"cons" ~data:(Lambda.Parse.parse "(/x./y.(/m.m x y))")
-  |> Map.set ~key:"car" ~data:(Lambda.Parse.parse "(/z.(z (/p./q.p)))")
-  |> Map.set ~key:"cdr" ~data:(Lambda.Parse.parse "(/z.(z (/p./q.q)))")
-  |> Map.set ~key:"nil" ~data:(Lambda.Parse.parse "(/z.(/p./q.p))")
+  (* |> Map.set ~key:"cons" ~data:(Lambda.Parse.parse "(/x./y.(/m.m x y))")
+   * |> Map.set ~key:"car" ~data:(Lambda.Parse.parse "(/z.(z (/p./q.p)))")
+   * |> Map.set ~key:"cdr" ~data:(Lambda.Parse.parse "(/z.(z (/p./q.q)))")
+   * |> Map.set ~key:"nil" ~data:(Lambda.Parse.parse "(/z.(/p./q.p))") *)
   (* Sxyz = xz(yz) *)
-  |> Map.set ~key:"s" ~data:(Lambda.Parse.parse "(/x./y./z.x z (y z))")
-  |> Map.set ~key:"i" ~data:(Lambda.Parse.parse "(/x.x)")
-  |> Map.set ~key:"t" ~data:Lambda.Bool.ltrue
-  |> Map.set ~key:"f" ~data:Lambda.Bool.lfalse
+  (* |> Map.set ~key:"s" ~data:(Lambda.Parse.parse "(/x./y./z.x z (y z))") *)
+  (* |> Map.set ~key:"i" ~data:(Lambda.Parse.parse "(/x.x)") *)
+  (* |> Map.set ~key:"t" ~data:Lambda.Bool.ltrue
+   * |> Map.set ~key:"f" ~data:Lambda.Bool.lfalse *)
   (* for tests only *)
   |> Map.set ~key:"f2048" ~data:(Lambda.Parse.parse "(f f2048)")
 ;;
@@ -73,6 +73,8 @@ let is_int str =
 
 let reduce t =
   let rec loop = function
+    | App (App (Var "f", _), y) -> y
+    | App (App (Var "t", x), _) -> x
     | App (App (App (Var "c", arg1), arg2), arg3) -> App (App (arg1, arg3), arg2)
     | App (App (App (Var "b", arg1), arg2), arg3) -> App (arg1, App (arg2, arg3))
     | App (App (App (Var "s", arg1), arg2), arg3) ->
@@ -100,22 +102,18 @@ let reduce t =
     | App (App (Var "lt", Var x), Var y) when is_int x && is_int y ->
       if Int.( < ) (Int.of_string x) (Int.of_string y) then Var "t" else Var "f"
     | App (Var "isnil", Var "nil") -> Var "t"
-    | App (Var "isnil", x) ->
-      if Lambda.Bool.is_bool x && Lambda.Bool.to_bool x
-      then Var "t"
-      else (
-        match x with
-        | Abs (_, x) ->
-          if Lambda.Bool.is_bool x && Lambda.Bool.to_bool x then Var "t" else Var "f"
-        | _ -> Var "f")
+    (* | App (Var "isnil", x) ->
+     *   if Lambda.Bool.is_bool x && Lambda.Bool.to_bool x
+     *   then Var "t"
+     *   else (
+     *     match x with
+     *     | Abs (_, x) ->
+     *       if Lambda.Bool.is_bool x && Lambda.Bool.to_bool x then Var "t" else Var "f"
+     *     | _ -> Var "f") *)
     | App (arg1, arg2) -> App (loop arg1, loop arg2)
     | t -> t
   in
-  let rec outer_loop t =
-    let t' = loop t in
-    if equal t t' then t else outer_loop t'
-  in
-  try outer_loop t with
+  try loop t with
   | exn ->
     eprint_s [%sexp "Exception while reducing", { t : t; exn : Exn.t }];
     raise exn
@@ -135,6 +133,6 @@ let subst t ~verbose ~defs =
 let rec eval t ~verbose ~defs =
   if verbose then printf "Eval: %s\n" (to_string_hum t);
   let t' = subst ~verbose ~defs t in
-  let t' = Lambda.L.reduce_fix t' in
-  if Lambda.L.len t' > Lambda.L.len t then eval t' ~verbose ~defs else reduce t'
+  let t' = reduce t' in
+  if equal t' t then t' else eval t' ~verbose ~defs
 ;;

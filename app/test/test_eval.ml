@@ -55,7 +55,7 @@ let%expect_test "base combinators" =
   test "ap isnil nil";
   test "ap isnil ap ap cons x0 x1";
   test "ap isnil ap car ap ap cons nil x0";
-  test "ap isnil ap car ap cdr ap ap cons x0 nil";
+  test "ap isnil ap cdr ap ap cons x0 nil";
   test "ap ap lt 0 -1";
   test "ap ap lt 0 0";
   test "ap ap lt 0 1";
@@ -86,7 +86,7 @@ let%expect_test "base combinators" =
     Starting evaluation: ap car ap ap cons x0 ap ap cons x1 x2
     Result: "x0"
     Starting evaluation: ap cdr ap ap cons x0 ap ap cons x1 x2
-    Result: \m -> ap (ap "m" "x1") "x2"
+    Result: ap (ap "cons" "x1") "x2"
     Starting evaluation: ap ap div 4 2
     Result: "2"
     Starting evaluation: ap ap div x0 1
@@ -106,10 +106,10 @@ let%expect_test "base combinators" =
     Starting evaluation: ap isnil nil
     Result: "t"
     Starting evaluation: ap isnil ap ap cons x0 x1
-    Result: "f"
+    Result: ap "isnil" (ap (ap "cons" "x0") "x1")
     Starting evaluation: ap isnil ap car ap ap cons nil x0
     Result: "t"
-    Starting evaluation: ap isnil ap car ap cdr ap ap cons x0 nil
+    Starting evaluation: ap isnil ap cdr ap ap cons x0 nil
     Result: "t"
     Starting evaluation: ap ap lt 0 -1
     Result: "f"
@@ -159,32 +159,34 @@ let%expect_test "eval" =
   [%expect
     {|
     Defs:
-    b := \x -> \y -> \z -> ap "x" (ap "y" "z")
-    c := \x -> \y -> \z -> ap (ap "x" "z") "y"
-    car := \z -> ap "z" (\p -> \q -> "p")
-    cdr := \z -> ap "z" (\p -> \q -> "q")
-    cons := \x -> \y -> \m -> ap (ap "m" "x") "y"
-    f := \x -> \y -> "y"
     f2048 := ap "f" "f2048"
-    i := \x -> "x"
-    nil := \z -> \p -> \q -> "p"
-    s := \x -> \y -> \z -> ap (ap "x" "z") (ap "y" "z")
     statelessdraw := ap (ap "c" (ap (ap "b" "b") (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))))) (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")
-    t := \x -> \y -> "x"
     Eval: ap "f2048" "42"
     Free vars: (f2048 42)
     Substituting f2048 => (App (Var f) (Var f2048))
-    Eval: ap (ap "f" "f2048") "42"
-    Free vars: (f f2048 42)
-    Substituting f => (Abs (x (Abs (y (Var y)))))
-    Substituting f2048 => (App (Var f) (Var f2048))
+    Eval: "42"
+    Free vars: (42)
     Result: "42" |}];
+  test "ap ap ap s add inc 1";
+  [%expect {|
+    Eval: ap (ap (ap "s" "add") "inc") "1"
+    Free vars: (s add inc 1)
+    Eval: ap (ap "add" "1") (ap "inc" "1")
+    Free vars: (add inc 1)
+    Eval: ap (ap "add" "1") "2"
+    Free vars: (add 1 2)
+    Eval: "3"
+    Free vars: (3)
+    Result: "3" |}];
   test "ap ap ap c x y ap ap add 1 2";
   [%expect
     {|
     Eval: ap (ap (ap "c" "x") "y") (ap (ap "add" "1") "2")
     Free vars: (c x y add 1 2)
-    Substituting c => (Abs (x (Abs (y (Abs (z (App (App (Var x) (Var z)) (Var y))))))))
+    Eval: ap (ap "x" (ap (ap "add" "1") "2")) "y"
+    Free vars: (x add 1 2 y)
+    Eval: ap (ap "x" "3") "y"
+    Free vars: (x 3 y)
     Result: ap (ap "x" "3") "y" |}];
   test "ap ap statelessdraw x0 x1";
   [%expect
@@ -201,11 +203,23 @@ let%expect_test "eval" =
       (App (Var c)
        (App (App (Var b) (Var cons)) (App (App (Var c) (Var cons)) (Var nil))))
       (Var nil)))
-    Eval: ap (ap (ap (ap "c" (ap (ap "b" "b") (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))))) (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")) "x0") "x1"
-    Free vars: (0 b c cons nil x0 x1)
-    Substituting b => (Abs (x (Abs (y (Abs (z (App (Var x) (App (Var y) (Var z)))))))))
-    Substituting c => (Abs (x (Abs (y (Abs (z (App (App (Var x) (Var z)) (Var y))))))))
-    Substituting cons => (Abs (x (Abs (y (Abs (m (App (App (Var m) (Var x)) (Var y))))))))
-    Substituting nil => (Abs (z (Abs (p (Abs (q (Var p)))))))
-    Result: \m -> ap (ap "m" "0") (\m -> ap (ap "m" "x0") (\m -> ap (ap "m" (\m -> ap (ap "m" (\m -> ap (ap "m" "x1") (\z -> \p -> \q -> "p"))) (\z -> \p -> \q -> "p"))) (\z -> \p -> \q -> "p"))) |}]
+    Eval: ap (ap (ap (ap (ap "b" "b") (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil")))) "x0") (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")) "x1"
+    Free vars: (0 x0 b c cons nil x1)
+    Eval: ap (ap (ap "b" (ap (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))) "x0")) (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")) "x1"
+    Free vars: (0 x0 b c cons nil x1)
+    Eval: ap (ap (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))) "x0") (ap (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil") "x1")
+    Free vars: (0 x0 b c cons nil x1)
+    Eval: ap (ap (ap "b" (ap "cons" "0")) (ap (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil")) "x0")) (ap (ap (ap (ap "b" "cons") (ap (ap "c" "cons") "nil")) "x1") "nil")
+    Free vars: (0 x0 b c cons x1 nil)
+    Eval: ap (ap "cons" "0") (ap (ap (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil")) "x0") (ap (ap (ap (ap "b" "cons") (ap (ap "c" "cons") "nil")) "x1") "nil"))
+    Free vars: (0 x0 b c cons x1 nil)
+    Eval: ap (ap "cons" "0") (ap (ap (ap (ap (ap "b" "b") "cons") "x0") (ap (ap "c" "cons") "nil")) (ap (ap "cons" (ap (ap (ap "c" "cons") "nil") "x1")) "nil"))
+    Free vars: (0 b x0 c cons x1 nil)
+    Eval: ap (ap "cons" "0") (ap (ap (ap "b" (ap "cons" "x0")) (ap (ap "c" "cons") "nil")) (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil"))
+    Free vars: (0 b x0 c cons x1 nil)
+    Eval: ap (ap "cons" "0") (ap (ap "cons" "x0") (ap (ap (ap "c" "cons") "nil") (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")))
+    Free vars: (0 x0 c cons x1 nil)
+    Eval: ap (ap "cons" "0") (ap (ap "cons" "x0") (ap (ap "cons" (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")) "nil"))
+    Free vars: (0 x0 cons x1 nil)
+    Result: ap (ap "cons" "0") (ap (ap "cons" "x0") (ap (ap "cons" (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")) "nil")) |}]
 ;;
