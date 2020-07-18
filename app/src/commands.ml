@@ -46,5 +46,17 @@ let commands =
                then print_endline (Encode.to_string_mach result)
                else print_s (Encode.sexp_of_t result);
                printf "Leftover: '%s'\n" leftover) )
+    ; ( "parse"
+      , Command.basic
+          ~summary:"Parse a file of definition like galaxy.txt"
+          (let%map_open filename = anon ("FILE" %: Filename.arg_type) in
+           fun () ->
+             Map.iteri (Eval.load_defs_exn ~filename) ~f:(fun ~key:name ~data:expansion ->
+                 printf "%10s := %s\n" name (Eval.to_string_hum expansion))) )
+    ; ( "interact-galaxy"
+      , Command.basic
+          ~summary:"Interact with a galaxy.txt"
+          (let%map_open filename = anon ("FILE" %: Filename.arg_type) in
+           fun () -> Interact.run ~filename) )
     ]
 ;;
