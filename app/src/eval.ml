@@ -73,6 +73,13 @@ let is_int str =
 
 let reduce t =
   let rec loop = function
+    | App (App (App (Var "c", arg1), arg2), arg3) -> App (App (arg1, arg3), arg2)
+    | App (App (App (Var "b", arg1), arg2), arg3) -> App (arg1, App (arg2, arg3))
+    | App (App (App (Var "s", arg1), arg2), arg3) ->
+      App (App (arg1, arg3), App (arg2, arg3))
+    | App (Var "i", arg1) -> arg1
+    | App (Var "car", App (App (Var "cons", arg1), _)) -> arg1
+    | App (Var "cdr", App (App (Var "cons", _), arg2)) -> arg2
     | App (Var "inc", Var x) when is_int x -> Var (Int.to_string (Int.of_string x + 1))
     | App (Var "dec", Var x) when is_int x -> Var (Int.to_string (Int.of_string x - 1))
     | App (Var "inc", App (Var "dec", Var x)) -> Var x
@@ -92,6 +99,7 @@ let reduce t =
       if String.equal arg1 arg2 then Var "t" else Var "f"
     | App (App (Var "lt", Var x), Var y) when is_int x && is_int y ->
       if Int.( < ) (Int.of_string x) (Int.of_string y) then Var "t" else Var "f"
+    | App (Var "isnil", Var "nil") -> Var "t"
     | App (Var "isnil", x) ->
       if Lambda.Bool.is_bool x && Lambda.Bool.to_bool x
       then Var "t"
