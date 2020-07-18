@@ -96,8 +96,13 @@ let reduce_maximally t =
     | App (App (Var "f", _), y) -> y
     | App (App (Var "t", x), _) -> x
     | App (Var "i", arg1) -> arg1
+    (* car/cdr *)
     | App (Var "car", App (App (Var "cons", arg1), _)) -> arg1
     | App (Var "cdr", App (App (Var "cons", _), arg2)) -> arg2
+    | App (Var "car", x) -> App (x, Var "t")
+    | App (Var "cdr", x) -> App (x, Var "f")
+    (* cons *)
+    | App (App (App (Var "cons", x), y), z) -> App (App (z, x), y)
     (* inc and dec *)
     | App (Var "inc", Num x) -> Num (x + 1)
     | App (Var "dec", Num x) -> Num (x - 1)
@@ -136,6 +141,8 @@ let reduce_maximally t =
     (*lt*)
     | App (App (Var "lt", Num x), Num y) -> if Int.( < ) x y then Var "t" else Var "f"
     | App (Var "isnil", Var "nil") -> Var "t"
+    | App (Var "isnil", App (App (Var "cons", _), _)) -> Var "t"
+    | App (Var "isnil", Num _) -> Var "f"
     | App (App (App (Var "if0", Num x), then_branch), else_branch) ->
       if x = 0 then then_branch else else_branch
     (* B *)
@@ -214,8 +221,8 @@ let eval_custom ~verbose ~defs =
         if equal t' t
         then t
         else
-          (* printf "===========\n%!"; *)
-          (* let (_ : string) = In_channel.input_line_exn In_channel.stdin in *)
+          (* printf "===========\n%!";
+           * let (_ : string) = In_channel.input_line_exn In_channel.stdin in *)
           loop t'
       in
       loop t)
