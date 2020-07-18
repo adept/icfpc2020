@@ -169,8 +169,11 @@ let%expect_test "base combinators" =
     printf "Result: %s\n" (to_string_hum res)
   in
   test "ap ap add 1 2";
+  test "ap ap add 3 ap ap add 1 2";
   test "ap car ap ap cons x0 x1";
   test "ap cdr ap ap cons x0 x1";
+  test "ap car ap ap cons x0 ap ap cons x1 x2";
+  test "ap cdr ap ap cons x0 ap ap cons x1 x2";
   test "ap ap div 4 2";
   test "ap ap div x0 1";
   test "ap ap eq x0 x0";
@@ -181,6 +184,7 @@ let%expect_test "base combinators" =
   test "ap i ap add 1";
   test "ap isnil nil";
   test "ap isnil ap ap cons x0 x1";
+  test "ap isnil ap car ap ap cons nil x0";
   test "ap ap lt 0 -1";
   test "ap ap lt 0 0";
   test "ap ap lt 0 1";
@@ -202,10 +206,16 @@ let%expect_test "base combinators" =
     {|
     Starting evaluation: ap ap add 1 2
     Result: "3"
+    Starting evaluation: ap ap add 3 ap ap add 1 2
+    Result: "6"
     Starting evaluation: ap car ap ap cons x0 x1
     Result: "x0"
     Starting evaluation: ap cdr ap ap cons x0 x1
     Result: "x1"
+    Starting evaluation: ap car ap ap cons x0 ap ap cons x1 x2
+    Result: "x0"
+    Starting evaluation: ap cdr ap ap cons x0 ap ap cons x1 x2
+    Result: \m -> ap (ap "m" "x1") "x2"
     Starting evaluation: ap ap div 4 2
     Result: "2"
     Starting evaluation: ap ap div x0 1
@@ -226,6 +236,8 @@ let%expect_test "base combinators" =
     Result: "t"
     Starting evaluation: ap isnil ap ap cons x0 x1
     Result: "f"
+    Starting evaluation: ap isnil ap car ap ap cons nil x0
+    Result: "t"
     Starting evaluation: ap ap lt 0 -1
     Result: "f"
     Starting evaluation: ap ap lt 0 0
