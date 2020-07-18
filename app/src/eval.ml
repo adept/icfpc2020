@@ -1,10 +1,19 @@
 open! Core
 
-type t = Lambda.L.term =
-  | Var of string
-  | Abs of (string * t)
-  | App of t * t
-[@@deriving equal, sexp]
+module T = struct
+  module U = struct
+    type t = Lambda.L.term =
+      | Var of string
+      | Abs of (string * t)
+      | App of t * t
+    [@@deriving compare, equal, sexp]
+  end
+
+  include U
+  include Comparable.Make (U)
+end
+
+include T.U
 
 let rec to_string_hum = function
   | Var name -> sprintf {|"%s"|} name
@@ -147,26 +156,31 @@ let rec eval t ~verbose ~defs =
 
 (** [eval_custom] is like [eval] but 1) only expands the left+inner-most leaf,
    and 2) memoizes results. *)
-let eval_custom t ~verbose ~defs =
-  if verbose then printf "Eval: %s\n" (to_string_hum t);
-  let rec expand_once t =
-    match t with
-    | Var name ->
-      (match Map.find defs name with
-      | None -> t
-      | Some expansion -> expansion)
-    | Abs _ -> t
-    | App (t1, t2) ->
-      (match expand_once t1 with
-      | t1' when not (equal t1 t1') -> App (t1', t2)
-      | _ ->
-        (match expand_once t2 with
-        | t2' when not (equal t2 t2') -> App (t1, t2')
-        | _ -> t))
-  in
-  let rec loop t =
-    let t' = reduce (expand_once t) in
-    if equal t' t then t else loop t'
-  in
-  loop t
+let eval_custom ~verbose ~defs =
+  let memo = Memo.of_comparable (module T) in
+  Staged.stage (fun t ->
+      if verbose then printf "Eval: %s\n" (to_string_hum t);
+      let rec expand_once t =
+        memo
+          (fun t ->
+            match t with
+            | Var name ->
+              (match Map.find defs name with
+              | None -> t
+              | Some expansion -> expansion)
+            | Abs _ -> t
+            | App (t1, t2) ->
+              (match expand_once t1 with
+              | t1' when not (equal t1 t1') -> App (t1', t2)
+              | _ ->
+                (match expand_once t2 with
+                | t2' when not (equal t2 t2') -> App (t1, t2')
+                | _ -> t)))
+          t
+      in
+      let rec loop t =
+        let t' = reduce (expand_once t) in
+        if equal t' t then t else loop t'
+      in
+      loop t)
 ;;

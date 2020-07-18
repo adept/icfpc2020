@@ -34,7 +34,8 @@ let%expect_test "base combinators" =
   let test str =
     printf "Starting evaluation: %s\n" str;
     let res =
-      Eval.eval_custom ~verbose:false (Eval.parse_exn (String.split str ~on:' ')) ~defs
+      (Eval.eval_custom ~verbose:false ~defs |> Staged.unstage)
+        (Eval.parse_exn (String.split str ~on:' '))
     in
     printf "Result: %s\n" (Eval.to_string_hum res)
   in
