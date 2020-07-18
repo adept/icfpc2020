@@ -74,6 +74,33 @@ let rec to_string_hum = function
     sprintf "ap %s %s" (str_of_arg x) (str_of_arg y)
 ;;
 
+(* Decode multidraw vector: list of lists of coordinate pairs *)
+let decode_vector t : (Big_int.t * Big_int.t) list list =
+  let decode_pair t =
+    match t with
+    | App (App (Var "cons", Num x), Num y) -> x, y
+    | x -> failwithf !"pair: %{sexp:t}" x ()
+  in
+  let _ = decode_pair in
+  let rec decode_list t =
+    match t with
+    | Nil -> []
+    | x ->
+      let pair = decode_pair (car x) in
+      let rest = decode_list (cdr x) in
+      pair :: rest
+  in
+  let rec loop t =
+    match t with
+    | Nil -> []
+    | x ->
+      let lst = decode_list (car x) in
+      let rest = loop (cdr x) in
+      lst :: rest
+  in
+  loop t
+;;
+
 let is_int str =
   try
     let (_ : Big_int.t) = Big_int.big_int_of_string str in

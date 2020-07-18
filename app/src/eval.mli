@@ -4,7 +4,7 @@ module Id : Unique_id.Id
 module Big_int : sig
   open! Big_int_Z
 
-  type t = Z.t
+  type t = Z.t [@@deriving sexp_of]
 
   val zero : t
   val is_zero : t -> bool
@@ -26,6 +26,7 @@ val load_defs_exn : filename:string -> t String.Map.t
 val car : t -> t
 
 val cdr : t -> t
+val decode_vector : t -> (Big_int.t * Big_int.t) list list
 
 (** Parsing *)
 

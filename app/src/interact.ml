@@ -17,13 +17,15 @@ let rec interact ~protocol ~state ~vector ~eval =
   printf !"res = %{sexp:Eval.t}\n%!" res;
   let flag = Eval.car res in
   let newState = Eval.car (Eval.cdr res) in
-  let vector = Eval.cdr (Eval.cdr res) in
+  let vector = Eval.car (Eval.cdr (Eval.cdr res)) in
   printf !"res = %{sexp: Eval.t}\n%!" res;
   printf !"flag = %{Eval#hum}\n%!" flag;
   match flag with
   | Num d when Eval.Big_int.is_zero d ->
     printf !"newState = %{Eval#hum}\n%!" newState;
-    printf !"vector = %{sexp:Eval.t}\n%!" vector;
+    printf
+      !"vector = %{sexp:(Eval.Big_int.t * Eval.Big_int.t) list list}\n%!"
+      (Eval.decode_vector vector);
     (* TODO: multipledraw vector *)
     (* TODO: choose where to click *)
     let clicked =
