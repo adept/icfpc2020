@@ -74,15 +74,17 @@ let defs =
   (* B x y z = x (y z)) *)
   |> Map.set ~key:"b" ~data:(Lambda.Parse.parse "(/x./y./z.x (y z))")
   (*cons: λh.λt.(λs.s h t) *)
-  |> Map.set ~key:"cons" ~data:(Lambda.Parse.parse "(/h./t.(/m.m h t))")
+  |> Map.set ~key:"cons" ~data:(Lambda.Parse.parse "(/x./y.(/m.m x y))")
   |> Map.set ~key:"car" ~data:(Lambda.Parse.parse "(/z.(z (/p./q.p)))")
   |> Map.set ~key:"cdr" ~data:(Lambda.Parse.parse "(/z.(z (/p./q.q)))")
-  |> Map.set ~key:"nil" ~data:(Lambda.Parse.parse "(/z.t)")
+  |> Map.set ~key:"nil" ~data:(Lambda.Parse.parse "(/z.(/p./q.p))")
   (* Sxyz = xz(yz) *)
   |> Map.set ~key:"s" ~data:(Lambda.Parse.parse "(/x./y./z.x z (y z))")
   |> Map.set ~key:"i" ~data:(Lambda.Parse.parse "(/x.x)")
   |> Map.set ~key:"t" ~data:Lambda.Bool.ltrue
   |> Map.set ~key:"f" ~data:Lambda.Bool.lfalse
+  (* for tests only *)
+  |> Map.set ~key:"f2048" ~data:(Lambda.Parse.parse "(f f2048)")
 ;;
 
 let is_int str =
@@ -130,24 +132,22 @@ let reduce t =
     raise exn
 ;;
 
-let rec subst_fix t ~verbose ~defs =
+let subst t ~verbose ~defs =
   let free_vars = Lambda.L.fv_l t in
   if verbose then printf !"Free vars: %{sexp: string list}\n" free_vars;
-  let t' =
-    List.fold free_vars ~init:t ~f:(fun acc free_var ->
-        match Map.find defs free_var with
-        | None -> acc
-        | Some definition ->
-          if verbose then printf !"Substituting %s => %{sexp: t}\n" free_var definition;
-          Lambda.L.subst free_var definition acc)
-  in
-  if Lambda.L.len t' > Lambda.L.len t then subst_fix t' ~verbose ~defs else t'
+  List.fold free_vars ~init:t ~f:(fun acc free_var ->
+      match Map.find defs free_var with
+      | None -> acc
+      | Some definition ->
+        if verbose then printf !"Substituting %s => %{sexp: t}\n" free_var definition;
+        Lambda.L.subst free_var definition acc)
 ;;
 
-let eval t ~verbose ~defs =
+let rec eval t ~verbose ~defs =
   if verbose then printf "Eval: %s\n" (to_string_hum t);
-  let t = subst_fix ~verbose ~defs t in
-  reduce (Lambda.L.reduce_fix t)
+  let t' = subst ~verbose ~defs t in
+  let t' = Lambda.L.reduce_fix t' in
+  if Lambda.L.len t' > Lambda.L.len t then eval t' ~verbose ~defs else reduce t'
 ;;
 
 (*
@@ -184,6 +184,7 @@ let%expect_test "base combinators" =
   test "ap isnil nil";
   test "ap isnil ap ap cons x0 x1";
   test "ap isnil ap car ap ap cons nil x0";
+  (* this does not work because it was eta-reduced. sadness *)
   test "ap isnil ap car ap cdr ap ap cons x0 nil";
   test "ap ap lt 0 -1";
   test "ap ap lt 0 0";
@@ -239,7 +240,7 @@ let%expect_test "base combinators" =
     Starting evaluation: ap isnil ap car ap ap cons nil x0
     Result: "t"
     Starting evaluation: ap isnil ap car ap cdr ap ap cons x0 nil
-    Result: "t"
+    Result: "f"
     Starting evaluation: ap ap lt 0 -1
     Result: "f"
     Starting evaluation: ap ap lt 0 0
@@ -284,25 +285,35 @@ let%expect_test "eval" =
     let res = eval ~verbose:true (parse_exn (String.split str ~on:' ')) ~defs in
     printf "Result: %s\n" (to_string_hum res)
   in
-  test "ap ap ap c x y ap ap add 1 2";
-  [%expect
-    {|
+  test "ap f2048 42";
+  [%expect {|
     Defs:
     b := \x -> \y -> \z -> ap "x" (ap "y" "z")
     c := \x -> \y -> \z -> ap (ap "x" "z") "y"
     car := \z -> ap "z" (\p -> \q -> "p")
     cdr := \z -> ap "z" (\p -> \q -> "q")
-    cons := \h -> \t -> \m -> ap (ap "m" "h") "t"
+    cons := \x -> \y -> \m -> ap (ap "m" "x") "y"
     f := \x -> \y -> "y"
+    f2048 := ap "f" "f2048"
     i := \x -> "x"
-    nil := \z -> "t"
+    nil := \z -> \p -> \q -> "p"
     s := \x -> \y -> \z -> ap (ap "x" "z") (ap "y" "z")
     statelessdraw := ap (ap "c" (ap (ap "b" "b") (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))))) (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")
     t := \x -> \y -> "x"
+    Eval: ap "f2048" "42"
+    Free vars: (f2048 42)
+    Substituting f2048 => (App (Var f) (Var f2048))
+    Eval: ap (ap "f" "f2048") "42"
+    Free vars: (f f2048 42)
+    Substituting f => (Abs (x (Abs (y (Var y)))))
+    Substituting f2048 => (App (Var f) (Var f2048))
+    Result: "42" |}];
+  test "ap ap ap c x y ap ap add 1 2";
+  [%expect
+    {|
     Eval: ap (ap (ap "c" "x") "y") (ap (ap "add" "1") "2")
     Free vars: (c x y add 1 2)
     Substituting c => (Abs (x (Abs (y (Abs (z (App (App (Var x) (Var z)) (Var y))))))))
-    Free vars: (x y add 1 2)
     Result: ap (ap "x" "3") "y" |}];
   test "ap ap statelessdraw x0 x1";
   [%expect
@@ -319,13 +330,11 @@ let%expect_test "eval" =
       (App (Var c)
        (App (App (Var b) (Var cons)) (App (App (Var c) (Var cons)) (Var nil))))
       (Var nil)))
+    Eval: ap (ap (ap (ap "c" (ap (ap "b" "b") (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))))) (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")) "x0") "x1"
     Free vars: (0 b c cons nil x0 x1)
     Substituting b => (Abs (x (Abs (y (Abs (z (App (Var x) (App (Var y) (Var z)))))))))
     Substituting c => (Abs (x (Abs (y (Abs (z (App (App (Var x) (Var z)) (Var y))))))))
-    Substituting cons => (Abs (h (Abs (t (Abs (m (App (App (Var m) (Var h)) (Var t))))))))
-    Substituting nil => (Abs (z (Var t)))
-    Free vars: (0 t x0 x1)
-    Substituting t => (Abs (x (Abs (y (Var x)))))
-    Free vars: (0 x0 x1)
-    Result: \m -> ap (ap "m" "0") (\x -> \y -> "x") |}]
+    Substituting cons => (Abs (x (Abs (y (Abs (m (App (App (Var m) (Var x)) (Var y))))))))
+    Substituting nil => (Abs (z (Abs (p (Abs (q (Var p)))))))
+    Result: \m -> ap (ap "m" "0") (\m -> ap (ap "m" "x0") (\m -> ap (ap "m" (\m -> ap (ap "m" (\m -> ap (ap "m" "x1") (\z -> \p -> \q -> "p"))) (\z -> \p -> \q -> "p"))) (\z -> \p -> \q -> "p"))) |}]
 ;;
