@@ -3,7 +3,6 @@ module Id : Unique_id.Id
 
 type t =
   | Var of string
-  | Abs of (string * t)
   | App of t * t
   | With_id of Id.t * t
 [@@deriving equal, sexp]

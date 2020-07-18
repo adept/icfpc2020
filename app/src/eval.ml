@@ -3,14 +3,12 @@ module Id = Unique_id.Int ()
 
 type t =
   | Var of string
-  | Abs of (string * t)
   | App of t * t
   | With_id of Id.t * t
 [@@deriving equal, sexp]
 
 let rec length = function
   | Var _ -> 1
-  | Abs (_, t) -> 1 + length t
   | App (t1, t2) -> 1 + length t1 + length t2
   | With_id (_, t) -> length t
 ;;
@@ -24,7 +22,6 @@ let rec to_string_hum = function
       | _ -> sprintf "(%s)" (to_string_hum arg)
     in
     sprintf "ap %s %s" (str_of_arg x) (str_of_arg y)
-  | Abs (x, term) -> sprintf "\\%s -> %s" x (to_string_hum term)
   | With_id (id, t) -> sprintf !"%{Id}: %s" id (to_string_hum t)
 ;;
 
@@ -94,7 +91,7 @@ let reduce t =
     | App (App (App (Var "s", arg1), arg2), arg3) ->
       let arg3 =
         match arg3 with
-        | Var _ | Abs _ | With_id _ -> arg3
+        | Var _ | With_id _ -> arg3
         | App _ ->
           let id = Id.create () in
           With_id (id, arg3)
@@ -156,7 +153,7 @@ let eval_custom ~verbose ~defs =
   let cache = Id.Table.create () in
   let rec reduce_memo t =
     match t with
-    | Var _ | Abs _ -> reduce t
+    | Var _ -> reduce t
     (* | App (t1, t2) -> reduce (App (reduce t1, reduce t2)) *)
     | App (t1, t2) -> reduce (App (reduce_memo t1, reduce_memo t2))
     | With_id (id, t3) ->
@@ -177,7 +174,6 @@ let eval_custom ~verbose ~defs =
           | Some expansion ->
             (* if verbose then printf !"Substituting %s => %{sexp: t}\n%!" name expansion; *)
             expansion)
-        | Abs _ -> t
         | App (t1, t2) ->
           (match expand_once t1 with
           | t1' when not (equal t1 t1') -> App (t1', t2)
