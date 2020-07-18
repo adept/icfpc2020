@@ -238,6 +238,8 @@ let%expect_test "base combinators" =
     Result: "f"
     Starting evaluation: ap isnil ap car ap ap cons nil x0
     Result: "t"
+    Starting evaluation: ap isnil ap car ap cdr ap ap cons x0 nil
+    Result: "t"
     Starting evaluation: ap ap lt 0 -1
     Result: "f"
     Starting evaluation: ap ap lt 0 0
