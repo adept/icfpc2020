@@ -19,3 +19,4 @@ val parse_def_exn : string -> string * t
 
 val base_defs : t String.Map.t
 val eval : t -> verbose:bool -> defs:t String.Map.t -> t
+val eval_custom : t -> verbose:bool -> defs:t String.Map.t -> t
