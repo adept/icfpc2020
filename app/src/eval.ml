@@ -149,25 +149,24 @@ let rec eval t ~verbose ~defs =
    and 2) memoizes results. *)
 let eval_custom t ~verbose ~defs =
   if verbose then printf "Eval: %s\n" (to_string_hum t);
-  let rec eval_once t =
+  let rec expand_once t =
     match t with
     | Var name ->
       (match Map.find defs name with
-      | None -> `Unchanged
-      | Some expansion -> `Changed expansion)
-    | Abs _ -> `Unchanged
+      | None -> t
+      | Some expansion -> expansion)
+    | Abs _ -> t
     | App (t1, t2) ->
-      (match eval_once t1 with
-      | `Changed t1' -> `Changed (App (t1', t2))
-      | `Unchanged ->
-        (match eval_once t2 with
-        | `Changed t2' -> `Changed (App (t1, t2'))
-        | `Unchanged -> `Unchanged))
+      (match expand_once t1 with
+      | t1' when not (equal t1 t1') -> App (t1', t2)
+      | _ ->
+        (match expand_once t2 with
+        | t2' when not (equal t2 t2') -> App (t1, t2')
+        | _ -> t))
   in
   let rec loop t =
-    match eval_once t with
-    | `Unchanged -> t
-    | `Changed t -> loop t
+    let t' = reduce (expand_once t) in
+    if equal t' t then t else loop t'
   in
   loop t
 ;;

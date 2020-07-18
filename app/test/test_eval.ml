@@ -34,7 +34,7 @@ let%expect_test "base combinators" =
   let test str =
     printf "Starting evaluation: %s\n" str;
     let res =
-      Eval.eval ~verbose:false (Eval.parse_exn (String.split str ~on:' ')) ~defs
+      Eval.eval_custom ~verbose:false (Eval.parse_exn (String.split str ~on:' ')) ~defs
     in
     printf "Result: %s\n" (Eval.to_string_hum res)
   in
@@ -229,5 +229,5 @@ let%expect_test "eval" =
     Eval: ap (ap "cons" "0") (ap (ap "cons" "x0") (ap (ap "cons" (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")) "nil"))
     Free vars: (0 x0 cons x1 nil)
     Result: ap (ap "cons" "0") (ap (ap "cons" "x0") (ap (ap "cons" (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")) "nil"))
-      |}]
+  |}]
 ;;
