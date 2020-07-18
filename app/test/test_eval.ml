@@ -28,6 +28,7 @@ let defs =
   |> List.map ~f:Eval.parse_def_exn
   |> List.fold_left ~init:Eval.base_defs ~f:(fun acc (key, data) ->
          Map.set acc ~key ~data)
+  |> Map.set ~key:"f2048" ~data:(Lambda.Parse.parse "(f f2048)")
 ;;
 
 let%expect_test "base combinators" =
@@ -159,7 +160,10 @@ let%expect_test "eval" =
   List.iter (Map.to_alist defs) ~f:(fun (name, expansion) ->
       printf "%s := %s\n" name (Eval.to_string_hum expansion));
   let test str =
-    let res = Eval.eval ~verbose:true (Eval.parse_exn (String.split str ~on:' ')) ~defs in
+    let res =
+      (Eval.eval_custom ~verbose:true ~defs |> Staged.unstage)
+        (Eval.parse_exn (String.split str ~on:' '))
+    in
     printf "Result: %s\n" (Eval.to_string_hum res)
   in
   test "ap f2048 42";
@@ -168,39 +172,23 @@ let%expect_test "eval" =
     Defs:
     f2048 := ap "f" "f2048"
     statelessdraw := ap (ap "c" (ap (ap "b" "b") (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))))) (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")
-    Eval: ap "f2048" "42"
-    Free vars: (f2048 42)
+    Eval (length: 3): ap "f2048" "42"
     Substituting f2048 => (App (Var f) (Var f2048))
-    Eval: "42"
-    Free vars: (42)
     Result: "42" |}];
   test "ap ap ap s add inc 1";
   [%expect
     {|
-    Eval: ap (ap (ap "s" "add") "inc") "1"
-    Free vars: (s add inc 1)
-    Eval: ap (ap "add" "1") (ap "inc" "1")
-    Free vars: (add inc 1)
-    Eval: ap (ap "add" "1") "2"
-    Free vars: (add 1 2)
-    Eval: "3"
-    Free vars: (3)
+    Eval (length: 7): ap (ap (ap "s" "add") "inc") "1"
     Result: "3" |}];
   test "ap ap ap c x y ap ap add 1 2";
   [%expect
     {|
-    Eval: ap (ap (ap "c" "x") "y") (ap (ap "add" "1") "2")
-    Free vars: (c x y add 1 2)
-    Eval: ap (ap "x" (ap (ap "add" "1") "2")) "y"
-    Free vars: (x add 1 2 y)
-    Eval: ap (ap "x" "3") "y"
-    Free vars: (x 3 y)
+    Eval (length: 11): ap (ap (ap "c" "x") "y") (ap (ap "add" "1") "2")
     Result: ap (ap "x" "3") "y" |}];
   test "ap ap statelessdraw x0 x1";
   [%expect
     {|
-    Eval: ap (ap "statelessdraw" "x0") "x1"
-    Free vars: (statelessdraw x0 x1)
+    Eval (length: 5): ap (ap "statelessdraw" "x0") "x1"
     Substituting statelessdraw => (App
      (App (Var c)
       (App (App (Var b) (Var b))
@@ -211,24 +199,6 @@ let%expect_test "eval" =
       (App (Var c)
        (App (App (Var b) (Var cons)) (App (App (Var c) (Var cons)) (Var nil))))
       (Var nil)))
-    Eval: ap (ap (ap (ap (ap "b" "b") (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil")))) "x0") (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")) "x1"
-    Free vars: (0 x0 b c cons nil x1)
-    Eval: ap (ap (ap "b" (ap (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))) "x0")) (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil")) "x1"
-    Free vars: (0 x0 b c cons nil x1)
-    Eval: ap (ap (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))) "x0") (ap (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil") "x1")
-    Free vars: (0 x0 b c cons nil x1)
-    Eval: ap (ap (ap "b" (ap "cons" "0")) (ap (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil")) "x0")) (ap (ap (ap (ap "b" "cons") (ap (ap "c" "cons") "nil")) "x1") "nil")
-    Free vars: (0 x0 b c cons x1 nil)
-    Eval: ap (ap "cons" "0") (ap (ap (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil")) "x0") (ap (ap (ap (ap "b" "cons") (ap (ap "c" "cons") "nil")) "x1") "nil"))
-    Free vars: (0 x0 b c cons x1 nil)
-    Eval: ap (ap "cons" "0") (ap (ap (ap (ap (ap "b" "b") "cons") "x0") (ap (ap "c" "cons") "nil")) (ap (ap "cons" (ap (ap (ap "c" "cons") "nil") "x1")) "nil"))
-    Free vars: (0 b x0 c cons x1 nil)
-    Eval: ap (ap "cons" "0") (ap (ap (ap "b" (ap "cons" "x0")) (ap (ap "c" "cons") "nil")) (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil"))
-    Free vars: (0 b x0 c cons x1 nil)
-    Eval: ap (ap "cons" "0") (ap (ap "cons" "x0") (ap (ap (ap "c" "cons") "nil") (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")))
-    Free vars: (0 x0 c cons x1 nil)
-    Eval: ap (ap "cons" "0") (ap (ap "cons" "x0") (ap (ap "cons" (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")) "nil"))
-    Free vars: (0 x0 cons x1 nil)
     Result: ap (ap "cons" "0") (ap (ap "cons" "x0") (ap (ap "cons" (ap (ap "cons" (ap (ap "cons" "x1") "nil")) "nil")) "nil"))
   |}]
 ;;

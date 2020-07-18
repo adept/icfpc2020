@@ -15,6 +15,12 @@ end
 
 include T.U
 
+let rec length = function
+  | Var _ -> 1
+  | Abs (_, t) -> 1 + length t
+  | App (t1, t2) -> 1 + length t1 + length t2
+;;
+
 let rec to_string_hum = function
   | Var name -> sprintf {|"%s"|} name
   | App (x, y) ->
@@ -58,25 +64,23 @@ let load_defs_exn ~filename =
   String.Map.of_alist_exn defs
 ;;
 
-let base_defs =
-  String.Map.empty
-  (* C x y z = x z y *)
-  (* |> Map.set ~key:"c" ~data:(Lambda.Parse.parse "(/x./y./z.x z y)") *)
-  (* B x y z = x (y z)) *)
-  (* |> Map.set ~key:"b" ~data:(Lambda.Parse.parse "(/x./y./z.x (y z))") *)
-  (*cons: λh.λt.(λs.s h t) *)
-  (* |> Map.set ~key:"cons" ~data:(Lambda.Parse.parse "(/x./y.(/m.m x y))")
-   * |> Map.set ~key:"car" ~data:(Lambda.Parse.parse "(/z.(z (/p./q.p)))")
-   * |> Map.set ~key:"cdr" ~data:(Lambda.Parse.parse "(/z.(z (/p./q.q)))")
-   * |> Map.set ~key:"nil" ~data:(Lambda.Parse.parse "(/z.(/p./q.p))") *)
-  (* Sxyz = xz(yz) *)
-  (* |> Map.set ~key:"s" ~data:(Lambda.Parse.parse "(/x./y./z.x z (y z))") *)
-  (* |> Map.set ~key:"i" ~data:(Lambda.Parse.parse "(/x.x)") *)
-  (* |> Map.set ~key:"t" ~data:Lambda.Bool.ltrue
-   * |> Map.set ~key:"f" ~data:Lambda.Bool.lfalse *)
-  (* for tests only *)
-  |> Map.set ~key:"f2048" ~data:(Lambda.Parse.parse "(f f2048)")
-;;
+let base_defs = String.Map.empty
+
+(* C x y z = x z y *)
+(* |> Map.set ~key:"c" ~data:(Lambda.Parse.parse "(/x./y./z.x z y)") *)
+(* B x y z = x (y z)) *)
+(* |> Map.set ~key:"b" ~data:(Lambda.Parse.parse "(/x./y./z.x (y z))") *)
+(*cons: λh.λt.(λs.s h t) *)
+(* |> Map.set ~key:"cons" ~data:(Lambda.Parse.parse "(/x./y.(/m.m x y))")
+ * |> Map.set ~key:"car" ~data:(Lambda.Parse.parse "(/z.(z (/p./q.p)))")
+ * |> Map.set ~key:"cdr" ~data:(Lambda.Parse.parse "(/z.(z (/p./q.q)))")
+ * |> Map.set ~key:"nil" ~data:(Lambda.Parse.parse "(/z.(/p./q.p))") *)
+(* Sxyz = xz(yz) *)
+(* |> Map.set ~key:"s" ~data:(Lambda.Parse.parse "(/x./y./z.x z (y z))") *)
+(* |> Map.set ~key:"i" ~data:(Lambda.Parse.parse "(/x.x)") *)
+(* |> Map.set ~key:"t" ~data:Lambda.Bool.ltrue
+ * |> Map.set ~key:"f" ~data:Lambda.Bool.lfalse *)
+(* for tests only *)
 
 let is_int str =
   try
@@ -157,28 +161,30 @@ let rec eval t ~verbose ~defs =
 (** [eval_custom] is like [eval] but 1) only expands the left+inner-most leaf,
    and 2) memoizes results. *)
 let eval_custom ~verbose ~defs =
-  let memo = Memo.of_comparable (module T) in
+  let reduce = Memo.of_comparable (module T) reduce in
   Staged.stage (fun t ->
-      if verbose then printf "Eval: %s\n" (to_string_hum t);
+      if verbose then printf "Eval (length: %d): %s\n%!" (length t) (to_string_hum t);
       let rec expand_once t =
-        memo
-          (fun t ->
-            match t with
-            | Var name ->
-              (match Map.find defs name with
-              | None -> t
-              | Some expansion -> expansion)
-            | Abs _ -> t
-            | App (t1, t2) ->
-              (match expand_once t1 with
-              | t1' when not (equal t1 t1') -> App (t1', t2)
-              | _ ->
-                (match expand_once t2 with
-                | t2' when not (equal t2 t2') -> App (t1, t2')
-                | _ -> t)))
-          t
+        match t with
+        | Var name ->
+          (match Map.find defs name with
+          | None -> t
+          | Some expansion ->
+            if verbose then printf !"Substituting %s => %{sexp: t}\n%!" name expansion;
+            reduce expansion)
+        | Abs _ -> t
+        | App (t1, t2) ->
+          (match expand_once t1 with
+          | t1' when not (equal t1 t1') -> reduce (App (t1', t2))
+          | _ ->
+            (match expand_once t2 with
+            | t2' when not (equal t2 t2') -> reduce (App (t1, t2'))
+            | _ -> t))
       in
       let rec loop t =
+        (* if verbose
+         * then printf "(length = %d) Eval_custom loop: %s\n%!" (length t) (to_string_hum t);
+         * let (_ : string) = In_channel.input_line_exn In_channel.stdin in *)
         let t' = reduce (expand_once t) in
         if equal t' t then t else loop t'
       in
