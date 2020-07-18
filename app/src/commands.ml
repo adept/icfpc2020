@@ -53,5 +53,10 @@ let commands =
            fun () ->
              Map.iteri (Eval.load_defs_exn ~filename) ~f:(fun ~key:name ~data:expansion ->
                  printf "%10s := %s\n" name (Eval.to_string_hum expansion))) )
+    ; ( "interact-galaxy"
+      , Command.basic
+          ~summary:"Interact with a galaxy.txt"
+          (let%map_open filename = anon ("FILE" %: Filename.arg_type) in
+           fun () -> Interact.run ~filename) )
     ]
 ;;
