@@ -3,15 +3,6 @@ open Lwt
 open Cohttp
 open Cohttp_lwt_unix
 
-let send_post str ~server_url =
-  printf "POSTing to server %s\n" str;
-  Client.post
-    ~body:(Cohttp_lwt.Body.of_string str)
-    ~headers:
-      (Cohttp.Header.of_list [ "Content-Length", string_of_int (String.length str) ])
-    (Uri.of_string server_url)
-;;
-
 let response_ok_exn (resp, body) =
   body
   |> Cohttp_lwt.Body.to_string
@@ -25,9 +16,20 @@ let response_ok_exn (resp, body) =
     exit 2
 ;;
 
-let decode_response_ok_exn (resp, body) =
-  response_ok_exn (resp, body)
-  >>= fun response ->
+let send_post_exn str ~server_url =
+  printf "POSTing to server %s\n" str;
+  Client.post
+    ~body:(Cohttp_lwt.Body.of_string str)
+    ~headers:
+      (Cohttp.Header.of_list
+         [ "Content-Length", string_of_int (String.length str)
+         ; "Content-Type", "text/plain"
+         ])
+    (Uri.of_string server_url)
+  >>= response_ok_exn
+;;
+
+let decode_response_ok_exn response =
   match Encode.decode response with
   | Ok (res, _leftover) -> return res
   | Error err -> failwithf !"Error decoding %s: %{Error#hum}" response err ()
@@ -36,12 +38,10 @@ let decode_response_ok_exn (resp, body) =
 let run ~server_url ~player_key =
   printf "ServerUrl: %s; PlayerKey: %s\n" server_url player_key;
   Lwt_main.run
-    (send_post player_key ~server_url
-    >>= response_ok_exn
+    (send_post_exn player_key ~server_url
     >>= fun body ->
     printf "Server response 1: %s\n" body;
-    send_post (player_key ^ player_key) ~server_url
-    >>= response_ok_exn
+    send_post_exn (player_key ^ player_key) ~server_url
     >>= fun body ->
     printf "Server response 2: %s\n" body;
     return ())
@@ -49,23 +49,16 @@ let run ~server_url ~player_key =
 
 let proxy_uri = "https://icfpc2020-api.testkontur.ru"
 
-let send_api ~player_key method_path payload =
-  let uri = sprintf "%s/%s?apiKey=%s" proxy_uri method_path player_key |> Uri.of_string in
-  printf "POSTing to server %s\n" payload;
-  Client.post
-    ~body:(Cohttp_lwt.Body.of_string payload)
-    ~headers:
-      (Cohttp.Header.of_list
-         [ "Content-Length", string_of_int (String.length payload)
-         ; "Content-Type", "text/plain"
-         ])
-    uri
+let send_api ~api_key method_path payload =
+  send_post_exn
+    payload
+    ~server_url:(sprintf "%s/%s?apiKey=%s" proxy_uri method_path api_key)
 ;;
 
-let ping ~player_key =
+let ping ~api_key =
   let open Encode in
   Lwt_main.run
-    (send_api ~player_key "aliens/send" (encode (Cons (Number 0, Nil)))
+    (send_api ~api_key "aliens/send" (encode (Cons (Number 0, Nil)))
     >>= decode_response_ok_exn
     >>= fun response ->
     printf !"Server response: %{sexp: Encode.t}\n" response;
@@ -85,8 +78,8 @@ let commands =
     ; ( "ping"
       , Command.basic
           ~summary:"Send ping to API server"
-          (let%map_open player_key = anon ("PLAYER-KEY" %: string) in
-           fun () -> ping ~player_key) )
+          (let%map_open api_key = anon ("API-KEY" %: string) in
+           fun () -> ping ~api_key) )
     ; ( "decode"
       , Command.basic
           ~summary:"Decode the given string"
