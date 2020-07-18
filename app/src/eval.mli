@@ -9,6 +9,8 @@ type t =
   | App of t * t
 [@@deriving equal, sexp]
 
+val car : t -> t
+val cdr : t -> t
 val to_string_hum : t -> string
 val load_defs_exn : filename:string -> t String.Map.t
 

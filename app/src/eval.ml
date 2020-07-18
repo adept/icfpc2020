@@ -28,6 +28,16 @@ let rec length = function
   | Arg2 (_, t1, t2) -> 1 + length t1 + length t2
 ;;
 
+let car = function
+  | App (App (Var "cons", h), _) -> h
+  | x -> failwithf !"Unexpected %{sexp:t} in car" x ()
+;;
+
+let cdr = function
+  | App (App (Var "cons", _), t) -> t
+  | x -> failwithf !"Unexpected %{sexp:t} in cd" x ()
+;;
+
 (* let rec has_colon = function
  *   | Var n -> String.is_prefix ~prefix:":" n
  *   | App (t1, t2) -> has_colon t1 || has_colon t2

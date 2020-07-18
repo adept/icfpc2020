@@ -14,9 +14,9 @@ let rec interact ~protocol ~state ~vector ~eval =
   printf "\nContinue? (Ctrl-C to quit)\n%!";
   let (_ : string) = In_channel.input_line_exn In_channel.stdin in
   let res = eval Eval.(App (App (protocol, state), vector)) in
-  let flag = eval (App (Var "car", res)) in
-  let newState = eval (App (Var "car", App (Var "cdr", res))) in
-  let vector = eval (App (Var "cdr", App (Var "cdr", res))) in
+  let flag = Eval.car res in
+  let newState = Eval.car (Eval.cdr res) in
+  let vector = Eval.cdr (Eval.cdr res) in
   printf !"res = %{sexp: Eval.t}\n%!" res;
   printf !"flag = %{Eval#hum}\n%!" flag;
   match flag with
