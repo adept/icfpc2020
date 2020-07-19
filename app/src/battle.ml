@@ -70,13 +70,46 @@ module Vec2 = struct
   ;;
 end
 
+module Ship_stats = struct
+  type t =
+    { a : Big_int.t
+    ; b : Big_int.t
+    ; c : Big_int.t
+    ; d : Big_int.t
+    }
+  [@@deriving sexp_of, fields]
+
+  let sample =
+    { a = Big_int_Z.big_int_of_int 20
+    ; b = Big_int_Z.big_int_of_int 20
+    ; c = Big_int_Z.big_int_of_int 20
+    ; d = Big_int_Z.big_int_of_int 1
+    }
+  ;;
+
+  let of_eval t =
+    let a, b, c, d = Eval.(tuple4 to_int_exn to_int_exn to_int_exn to_int_exn t) in
+    { a; b; c; d }
+  ;;
+
+  let to_eval t =
+    Eval.(
+      encode_list
+        [ var (Big_int.to_string t.a)
+        ; var (Big_int.to_string t.b)
+        ; var (Big_int.to_string t.c)
+        ; var (Big_int.to_string t.d)
+        ])
+  ;;
+end
+
 module Ship = struct
   type t =
     { role : Role.t
     ; id : Big_int.t
     ; pos : Vec2.t
     ; velocity : Vec2.t
-    ; x4 : Eval.t
+    ; stats : Ship_stats.t
     ; x5 : Big_int.t
     ; x6 : Big_int.t
     ; x7 : Big_int.t
@@ -86,20 +119,20 @@ module Ship = struct
   let of_eval t =
     printf !"SHIP: %{Eval#hum}\n" t;
     List.iteri (Eval.decode_list t) ~f:(fun i t -> printf !"SHIP[%d]: %{Eval#hum}\n" i t);
-    let role, id, pos, velocity, x4, x5, x6, x7 =
+    let role, id, pos, velocity, stats, x5, x6, x7 =
       Eval.(
         tuple8
           Role.of_eval
           to_int_exn
           Vec2.of_eval
           Vec2.of_eval
-          id
+          Ship_stats.of_eval
           to_int_exn
           to_int_exn
           to_int_exn
           t)
     in
-    { role; id; pos; velocity; x4; x5; x6; x7 }
+    { role; id; pos; velocity; stats; x5; x6; x7 }
   ;;
 end
 
@@ -207,10 +240,7 @@ let start ~server_url ~api_key player_key =
         (of_eval_exn
            Eval.(
              encode_list
-               [ var "3"
-               ; var player_key (* TODO *)
-               ; encode_list [ var "20"; var "20"; var "20"; var "1" ]
-               ])))
+               [ var "3"; var player_key (* TODO *); Ship_stats.(to_eval sample) ])))
   in
   let response =
     Http.send_api_exn ~server_url ~api_key ~method_path:"aliens/send" start_msg
