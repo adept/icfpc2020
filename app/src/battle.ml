@@ -84,11 +84,22 @@ module Ship_stats = struct
     }
   [@@deriving sexp_of, fields]
 
-  let sample =
-    (* We previously tried:
+  (* We previously tried:
 
-       - (255, 1, 1, 1) but we start to use lots of fuel after a few turns.
-    *)
+     - (255, 1, 1, 1) but we start to use lots of fuel after a few turns.
+     - (254, 0, 16, 1) we have good fuel efficiency, but the cannons don't fire
+     - (214, 10, 16, 1) good fuel efficiency and the cannons fire.
+  *)
+
+  let attacker_stats =
+    { fuel = Big_int_Z.big_int_of_int 214
+    ; b = Big_int_Z.big_int_of_int 10
+    ; c = Big_int_Z.big_int_of_int 16
+    ; d = Big_int_Z.big_int_of_int 1
+    }
+  ;;
+
+  let defender_stats =
     { fuel = Big_int_Z.big_int_of_int 254
     ; b = Big_int_Z.big_int_of_int 0
     ; c = Big_int_Z.big_int_of_int 16
@@ -315,14 +326,21 @@ let join ~server_url ~api_key player_key =
   game_info
 ;;
 
-let start ~server_url ~api_key player_key =
+let start ~server_url ~api_key ~player_key ~role =
   let start_msg =
     Encode.(
       encode
         (of_eval_exn
            Eval.(
              encode_list
-               [ var "3"; var player_key (* TODO *); Ship_stats.(to_eval sample) ])))
+               [ var "3"
+               ; var player_key
+               ; Ship_stats.(
+                   to_eval
+                     (match (role : Role.t) with
+                     | Attacker -> attacker_stats
+                     | Defender -> defender_stats))
+               ])))
   in
   let response =
     Http.send_api_exn ~server_url ~api_key ~method_path:"aliens/send" start_msg
@@ -531,7 +549,7 @@ let run ~server_url ~player_key ~api_key =
   match Game_info.stage info with
   | Finished -> ()
   | _ ->
-    let info = start ~server_url ~api_key player_key in
+    let info = start ~server_url ~api_key ~player_key ~role:info.role in
     (match Game_info.stage info with
     | Finished -> ()
     | _ ->
