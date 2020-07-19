@@ -22,6 +22,12 @@ let rec to_string_hum t =
     sprintf "ap %s %s" (str_of_arg x) (str_of_arg y)
 ;;
 
+let rec to_string_mach t =
+  match t.u with
+  | Var name -> name
+  | App (x, y) -> sprintf "ap %s %s" (to_string_mach x) (to_string_mach y)
+;;
+
 let var str = { u = Var str; evaluated = None }
 let app x y = { u = App (x, y); evaluated = None }
 

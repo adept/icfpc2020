@@ -90,7 +90,7 @@ let rec interact ~protocol ~state ~vector ~eval ~api_key =
         [%sexp
           "Flag is not a number", { flag : string = Eval.to_string_hum flag; exn : Exn.t }]
     | true ->
-      printf !"newState = %{Eval#hum}\n%!" newState;
+      printf !"newState = %{Eval#mach}\n%!" newState;
       let pictures = Eval.decode_vector vector in
       printf !"pictures = %{sexp:(int*int) list list}\n%!" pictures;
       G.clear_graph ();
