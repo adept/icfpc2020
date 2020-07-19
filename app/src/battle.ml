@@ -108,10 +108,30 @@ let join ~api_key player_key =
   printf !"JOIN RESP: %{Encode#mach}\n" response;
   let game_info = game_response (Encode.to_eval response) in
   printf !"GAME INFO: %{sexp: Game_info.t}\n" game_info;
+  game_info
+;;
+
+let start ~api_key player_key =
+  let join_msg =
+    Encode.(
+      encode
+        (of_eval_exn
+           Eval.(
+             encode_list
+               [ var "3"
+               ; var player_key
+               ; encode_list [ var "20"; var "20"; var "20"; var "1" ]
+               ])))
+  in
+  let response = Http.send_api_exn ~api_key ~method_path:"aliens/send" join_msg in
+  printf !"START RESP: %{Encode#mach}\n" response;
+  let game_info = game_response (Encode.to_eval response) in
+  printf !"GAME INFO: %{sexp: Game_info.t}\n" game_info;
   ()
 ;;
 
 let run ~server_url:_ ~player_key ~api_key =
   let player_key = maybe_create ~api_key player_key in
-  join ~api_key player_key
+  let _info = join ~api_key player_key in
+  start ~api_key player_key
 ;;
