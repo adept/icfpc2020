@@ -454,11 +454,33 @@ module Simulator = struct
         if s1 <> 0 && s1 = s2 then false else true))
   ;;
 
+  let planet_boundary = 20
+
   let intersects_planet a b =
-    segments_intersect a b (16, -16) (16, 16)
-    || segments_intersect a b (-16, -16) (-16, 16)
-    || segments_intersect a b (-16, -16) (16, -16)
-    || segments_intersect a b (-16, 16) (16, 16)
+    (fst b <= planet_boundary
+    && fst b >= -planet_boundary
+    && snd b <= planet_boundary
+    && snd b >= -planet_boundary)
+    || segments_intersect
+         a
+         b
+         (planet_boundary, -planet_boundary)
+         (planet_boundary, planet_boundary)
+    || segments_intersect
+         a
+         b
+         (-planet_boundary, -planet_boundary)
+         (-planet_boundary, planet_boundary)
+    || segments_intersect
+         a
+         b
+         (-planet_boundary, -planet_boundary)
+         (planet_boundary, -planet_boundary)
+    || segments_intersect
+         a
+         b
+         (-planet_boundary, planet_boundary)
+         (planet_boundary, planet_boundary)
   ;;
 
   let out_of_bounds a b =
@@ -474,7 +496,10 @@ module Simulator = struct
     printf "%b\n" (intersects_planet (-18, 15) (-6, 15));
     [%expect {|
       true
-      false
+      true
+      true |}];
+    printf "%b\n" (intersects_planet (9, 19) (5, 15));
+    [%expect {|
       true |}]
   ;;
 
