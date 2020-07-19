@@ -1,14 +1,14 @@
 open! Core
 module G = Graphics
 
-let pixel_size = 5
+let pixel_size = 10
 let pixel_shift = 16
 let color_step = 10
 
 let put_pixel (x, y) =
   G.fill_rect
     ((pixel_shift + x) * pixel_size)
-    ((pixel_shift + y) * pixel_size)
+    ((pixel_shift - y) * pixel_size)
     pixel_size
     pixel_size
 ;;
@@ -31,7 +31,7 @@ let get_click () =
   printf "waiting for click\n";
   let status = G.wait_next_event [ G.Button_down ] in
   let x = (status.G.mouse_x / pixel_size) - pixel_shift in
-  let y = (status.G.mouse_y / pixel_size) - pixel_shift in
+  let y = -((status.G.mouse_y / pixel_size) - pixel_shift) in
   printf "clicked: (%d,%d) => (%d,%d)\n%!" status.G.mouse_x status.G.mouse_y x y;
   G.moveto 10 10;
   G.set_color G.white;
