@@ -63,9 +63,9 @@ module Game_info = struct
     ; x2 : Eval.t
     ; x3 : Eval.t
     ; x4 : Eval.t
-    ; tick : Eval.t
+    ; tick : Big_int.t
     ; x1 : Eval.t
-    ; ships_commands : Eval.t
+    ; ships_commands : Eval.t list
     }
   [@@deriving fields, sexp_of]
 
@@ -75,8 +75,8 @@ module Game_info = struct
     printf !"STATE: %{Eval#hum}\n%!" state;
     let tick, x1, ships_commands =
       match Eval.decode_list state with
-      | [] -> Eval.var "0", Eval.var "0", Eval.var "0"
-      | _ -> Eval.(tuple3 id id id state)
+      | [] -> Eval.var "0", Eval.var "0", []
+      | _ -> Eval.(tuple3 id id decode_list state)
     in
     { stage = Stage.of_eval stage
     ; x0
@@ -84,7 +84,7 @@ module Game_info = struct
     ; x2
     ; x3
     ; x4
-    ; tick
+    ; tick = Eval.to_int_exn tick
     ; x1
     ; ships_commands
     }
