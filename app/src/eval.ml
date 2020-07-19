@@ -183,7 +183,7 @@ and eval_once t ~verbose ~defs =
         | Var "add" -> var (Int.to_string (to_int_exn (eval x) + to_int_exn (eval y)))
         | Var "mul" -> var (Int.to_string (to_int_exn (eval x) * to_int_exn (eval y)))
         | Var "div" -> var (Int.to_string (to_int_exn (eval y) / to_int_exn (eval x)))
-        | Var "lt" -> var (if to_int_exn (eval x) < to_int_exn (eval y) then "t" else "f")
+        | Var "lt" -> var (if to_int_exn (eval y) < to_int_exn (eval x) then "t" else "f")
         | Var "eq" -> var (if to_int_exn (eval x) = to_int_exn (eval y) then "t" else "f")
         | Var "cons" -> eval_cons y x ~verbose ~defs
         | App (f3, z) ->
