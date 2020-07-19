@@ -39,6 +39,18 @@ val tuple5
   -> t
   -> 'a * 'b * 'c * 'd * 'e
 
+val tuple8
+  :  (t -> 'a)
+  -> (t -> 'b)
+  -> (t -> 'c)
+  -> (t -> 'd)
+  -> (t -> 'e)
+  -> (t -> 'f)
+  -> (t -> 'g)
+  -> (t -> 'h)
+  -> t
+  -> 'a * 'b * 'c * 'd * 'e * 'f * 'g * 'h
+
 (** Parsing *)
 
 val parse : string list -> (t * string list) Or_error.t

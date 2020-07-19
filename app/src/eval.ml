@@ -68,6 +68,7 @@ let decode_list t =
   let rec loop t =
     match t.u with
     | Var "nil" -> []
+    | Var _ -> [ t ]
     | _ ->
       let h = car t in
       let rest = loop (cdr t) in
@@ -113,6 +114,12 @@ let tuple5 fa fb fc fd fe t =
   match decode_list t with
   | [ a; b; c; d; e ] -> fa a, fb b, fc c, fd d, fe e
   | x -> failwithf !"tuple5: %{sexp:t list}" x ()
+;;
+
+let tuple8 fa fb fc fd fe ff fg fh t =
+  match decode_list t with
+  | [ a; b; c; d; e; f; g; h ] -> fa a, fb b, fc c, fd d, fe e, ff f, fg g, fh h
+  | x -> failwithf !"tuple8: %{sexp:t list}" x ()
 ;;
 
 let rec encode_int_list x =
