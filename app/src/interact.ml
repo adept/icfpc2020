@@ -29,11 +29,14 @@ let color colors i =
 ;;
 
 let compute_pixel_shift pics =
-  let min_x, min_y =
+  let min_x, max_y =
     List.fold ~init:(0, 0) pics ~f:(fun acc pic ->
-        List.fold ~init:acc pic ~f:(fun (min_x, min_y) (x, y) -> min x min_x, min y min_y))
+        List.fold ~init:acc pic ~f:(fun (min_x, max_y) (x, y) -> min x min_x, max y max_y))
   in
-  -min_x + 5, -min_y + 5
+  let x = -min_x + 5 in
+  let y = max_y + 5 in
+  printf "Shifting by %d, %d\n" x y;
+  x, y
 ;;
 
 let draw_pictures pixel_shift pics =
