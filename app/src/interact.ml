@@ -85,6 +85,7 @@ let rec interact ~protocol ~state ~vector ~eval =
 
 let run ~filename ~protocol ~state ~vector =
   G.open_graph " 1000x1000";
+  G.set_window_title "Messages From Space";
   let defs = Eval.load_defs_exn ~filename in
   let p str = Eval.parse_exn (String.split ~on:' ' str) in
   let eval = Eval.eval_custom ~verbose:true ~defs |> Staged.unstage in
