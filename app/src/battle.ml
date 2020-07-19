@@ -139,7 +139,7 @@ end
 module Game_info = struct
   type t =
     { stage : Stage.t
-    ; x0 : Big_int.t
+    ; max_ticks : Big_int.t
     ; role : Role.t
     ; x2 : Eval.t
     ; x3 : Eval.t
@@ -153,7 +153,9 @@ module Game_info = struct
 
   let of_eval stage info state =
     printf !"INFO: %{Eval#hum}\n%!" info;
-    let x0, role, x2, x3, x4 = Eval.(tuple5 to_int_exn Role.of_eval id id id info) in
+    let max_ticks, role, x2, x3, x4 =
+      Eval.(tuple5 to_int_exn Role.of_eval id id id info)
+    in
     printf !"STATE: %{Eval#hum}\n%!" state;
     let tick, x1, ships =
       match Eval.decode_list state with
