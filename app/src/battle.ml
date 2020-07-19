@@ -1,6 +1,6 @@
 open Core
 
-let version = "0.99 DIR-FLIP-FIX"
+let version = "0.99 STATIONARY"
 
 let maybe_create ~server_url ~api_key player_key =
   if String.equal player_key "ATTACK" || String.equal player_key "DEFEND"
