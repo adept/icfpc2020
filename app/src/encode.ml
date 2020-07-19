@@ -78,7 +78,8 @@ let rec decode = function
     let%bind car, leftover = decode (String.slice str 2 0) in
     let%bind cdr, leftover = decode leftover in
     Ok (Cons (car, cdr), leftover)
-  | "010" -> Ok (Number Big_int.zero, "")
+  | str when String.is_prefix str ~prefix:"010" ->
+    Ok (Number Big_int.zero, String.slice str 3 0)
   | str ->
     let open Or_error.Let_syntax in
     let%bind () =
