@@ -78,7 +78,7 @@ end
 module Ship_stats = struct
   type t =
     { fuel : Big_int.t
-    ; b : Big_int.t
+    ; guns : Big_int.t
     ; c : Big_int.t
     ; d : Big_int.t
     }
@@ -93,7 +93,7 @@ module Ship_stats = struct
 
   let attacker_stats =
     { fuel = Big_int_Z.big_int_of_int 214
-    ; b = Big_int_Z.big_int_of_int 10
+    ; guns = Big_int_Z.big_int_of_int 10
     ; c = Big_int_Z.big_int_of_int 16
     ; d = Big_int_Z.big_int_of_int 1
     }
@@ -101,22 +101,22 @@ module Ship_stats = struct
 
   let defender_stats =
     { fuel = Big_int_Z.big_int_of_int 254
-    ; b = Big_int_Z.big_int_of_int 0
+    ; guns = Big_int_Z.big_int_of_int 0
     ; c = Big_int_Z.big_int_of_int 16
     ; d = Big_int_Z.big_int_of_int 1
     }
   ;;
 
   let of_eval t =
-    let fuel, b, c, d = Eval.(tuple4 to_int_exn to_int_exn to_int_exn to_int_exn t) in
-    { fuel; b; c; d }
+    let fuel, guns, c, d = Eval.(tuple4 to_int_exn to_int_exn to_int_exn to_int_exn t) in
+    { fuel; guns; c; d }
   ;;
 
   let to_eval t =
     Eval.(
       encode_list
         [ var (Big_int.to_string t.fuel)
-        ; var (Big_int.to_string t.b)
+        ; var (Big_int.to_string t.guns)
         ; var (Big_int.to_string t.c)
         ; var (Big_int.to_string t.d)
         ])
