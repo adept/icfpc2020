@@ -82,5 +82,17 @@ let commands =
                ~doc:"API-KEY API-KEY for identifying with the server"
            in
            fun () -> Interact.run ~filename ~protocol ~state ~vector ~api_key) )
+    ; ( "battle"
+      , Command.basic
+          ~summary:"Connect to the tournament server"
+          (let%map_open server_url = anon ("SERVER-URL" %: string)
+           and player_key = anon ("PLAYER-KEY" %: string)
+           and api_key =
+             flag
+               "-api-key"
+               (required string)
+               ~doc:"API-KEY API-KEY for identifying with the server"
+           in
+           fun () -> Battle.run ~api_key ~server_url ~player_key) )
     ]
 ;;
