@@ -14,7 +14,19 @@ let put_pixel (shift_x, shift_y) (x, y) =
 let draw_picture pixel_shift pic = List.iter ~f:(put_pixel pixel_shift) pic
 
 (* i-th gray *)
-let color color_step i = G.rgb (i * color_step) (i * color_step) (i * color_step)
+let color colors i =
+  let step = 250 / (colors / 3) in
+  let third = colors / 3 in
+  let attenuate = 50 in
+  let r, g, b =
+    if i <= third
+    then step * i, attenuate, attenuate
+    else if third <= i && i <= third * 2
+    then attenuate, step * (i - third), attenuate
+    else attenuate, attenuate, step * (i - (2 * third))
+  in
+  G.rgb r g b
+;;
 
 let compute_pixel_shift pics =
   let min_x, min_y =
@@ -25,9 +37,9 @@ let compute_pixel_shift pics =
 ;;
 
 let draw_pictures pixel_shift pics =
-  let color_step = 255 - (255 / List.length pics) in
+  let colors = List.length pics in
   List.iteri (List.rev pics) ~f:(fun i pic ->
-      G.set_color (color color_step i);
+      G.set_color (color colors i);
       draw_picture pixel_shift pic)
 ;;
 
