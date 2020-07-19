@@ -114,7 +114,21 @@ module Ship = struct
     ; x6 : Big_int.t
     ; x7 : Big_int.t
     }
-  [@@deriving sexp_of, fields]
+  [@@deriving fields]
+
+  let sexp_of_t { role; id; pos; velocity; x4; x5; x6; x7 } =
+    [%sexp
+      "Ship"
+      , { role : Role.t
+        ; id : Big_int.t
+        ; pos : Vec2.t
+        ; velocity : Vec2.t
+        ; x4 : string = Eval.to_string_mach x4
+        ; x5 : Big_int.t
+        ; x6 : Big_int.t
+        ; x7 : Big_int.t
+        }]
+  ;;
 
   let of_eval t =
     printf !"SHIP: %{Eval#hum}\n" t;
@@ -149,7 +163,27 @@ module Game_info = struct
     ; our_ship : (Ship.t * Eval.t list) option (* ship, commands *)
     ; their_ship : (Ship.t * Eval.t list) option (* ship, commands *)
     }
-  [@@deriving fields, sexp_of]
+  [@@deriving fields]
+
+  let sexp_of_t { stage; x0; role; x2; x3; x4; tick; x1; our_ship; their_ship } =
+    [%sexp
+      "Game_info"
+      , { stage : Stage.t
+        ; x0 : Big_int.t
+        ; role : Role.t
+        ; tick : Big_int.t
+        ; x2 : string = Eval.to_string_mach x2
+        ; x3 : string = Eval.to_string_mach x3
+        ; x4 : string = Eval.to_string_mach x4
+        ; x1 : string = Eval.to_string_mach x1
+        ; our_ship : (Ship.t * string list) option =
+            Option.map our_ship ~f:(fun (ship, commands) ->
+                ship, List.map commands ~f:Eval.to_string_mach)
+        ; their_ship : (Ship.t * string list) option =
+            Option.map their_ship ~f:(fun (ship, commands) ->
+                ship, List.map commands ~f:Eval.to_string_mach)
+        }]
+  ;;
 
   let of_eval stage info state =
     printf !"INFO: %{Eval#hum}\n%!" info;
