@@ -255,19 +255,19 @@ let shoot_cmd ~ship_id ~target ~x3 =
     ]
 ;;
 
-(** Returns a unit vector pointing to the planet from [pos]. Broken? *)
-let _planet_vec (x, y) =
+(** Returns a unit vector pointing to the planet from [pos]. *)
+let quadrants (x, y) =
   let open Big_int in
   if y < zero && abs y >= abs x
   then (
     (* Top quadrant *)
     printf "QUADRANT: TOP\n%!";
-    zero, minus_one)
+    zero, one)
   else if y > zero && abs y >= abs x
   then (
     (* Bottom quadrant *)
     printf "QUADRANT: BOTTOM\n%!";
-    zero, one)
+    zero, minus_one)
   else if x < zero && abs x >= abs y
   then (
     (* Left quadrant *)
@@ -279,9 +279,15 @@ let _planet_vec (x, y) =
     minus_one, zero)
 ;;
 
-(* Accel away from the planet *)
-let away_from (x, y) =
-  Big_int.of_int (-Big_int_Z.sign_big_int x), Big_int.of_int (-Big_int_Z.sign_big_int y)
+let sign x = if x > 0 then 1 else if x < 0 then -1 else 0
+
+(* Accel away from the planet, broken *)
+let away_from_planet (x, y) =
+  let x = Big_int_Z.int_of_big_int x in
+  let y = Big_int_Z.int_of_big_int y in
+  let x = if x >= -16 || x <= 16 then 0 else -sign x in
+  let y = if y >= -16 || y <= 16 then 0 else -sign y in
+  Big_int.of_int x, Big_int.of_int y
 ;;
 
 let towards (x, y) =
@@ -358,9 +364,9 @@ let run ~server_url ~player_key ~api_key =
           | None ->
             (* No ship :,() *)
             []
-          | Some ({ id; velocity; _ }, _) ->
+          | Some ({ id; pos; _ }, _) ->
             List.filter_opt
-              [ Some (accelerate_cmd ~ship_id:id ~vector:(towards velocity))
+              [ Some (accelerate_cmd ~ship_id:id ~vector:(quadrants pos))
               ; Option.map info.their_ship ~f:(fun (ship, _) ->
                     shoot_cmd
                       ~ship_id:id
