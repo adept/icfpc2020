@@ -3,7 +3,6 @@ module G = Graphics
 
 let pixel_size = 10
 let pixel_shift = 16
-let color_step = 10
 
 let put_pixel (x, y) =
   G.fill_rect
@@ -16,11 +15,12 @@ let put_pixel (x, y) =
 let draw_picture pic = List.iter ~f:put_pixel pic
 
 (* i-th gray *)
-let color i = G.rgb (i * color_step) (i * color_step) (i * color_step)
+let color color_step i = G.rgb (i * color_step) (i * color_step) (i * color_step)
 
 let draw_pictures pics =
+  let color_step = 255 / List.length pics in
   List.iteri pics ~f:(fun i pic ->
-      G.set_color (color i);
+      G.set_color (color color_step i);
       draw_picture pic)
 ;;
 
