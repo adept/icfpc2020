@@ -74,7 +74,7 @@ end
 
 module Ship_stats = struct
   type t =
-    { a : Big_int.t
+    { fuel : Big_int.t
     ; b : Big_int.t
     ; c : Big_int.t
     ; d : Big_int.t
@@ -82,22 +82,22 @@ module Ship_stats = struct
   [@@deriving sexp_of, fields]
 
   let sample =
-    { a = Big_int_Z.big_int_of_int 20
-    ; b = Big_int_Z.big_int_of_int 20
-    ; c = Big_int_Z.big_int_of_int 20
+    { fuel = Big_int_Z.big_int_of_int 255
+    ; b = Big_int_Z.big_int_of_int 1
+    ; c = Big_int_Z.big_int_of_int 1
     ; d = Big_int_Z.big_int_of_int 1
     }
   ;;
 
   let of_eval t =
-    let a, b, c, d = Eval.(tuple4 to_int_exn to_int_exn to_int_exn to_int_exn t) in
-    { a; b; c; d }
+    let fuel, b, c, d = Eval.(tuple4 to_int_exn to_int_exn to_int_exn to_int_exn t) in
+    { fuel; b; c; d }
   ;;
 
   let to_eval t =
     Eval.(
       encode_list
-        [ var (Big_int.to_string t.a)
+        [ var (Big_int.to_string t.fuel)
         ; var (Big_int.to_string t.b)
         ; var (Big_int.to_string t.c)
         ; var (Big_int.to_string t.d)
@@ -257,16 +257,24 @@ let shoot_cmd ~ship_id ~target ~x3 =
 let planet_vec (x, y) =
   let open Big_int in
   if y < zero && abs y >= abs x
-  then (* Top quadrant *)
-    zero, one
+  then (
+    (* Top quadrant *)
+    printf "QUADRANT: TOP\n%!";
+    zero, one)
   else if y > zero && abs y >= abs x
-  then (* Bottom quadrant *)
-    zero, minus_one
+  then (
+    (* Bottom quadrant *)
+    printf "QUADRANT: BOTTOM\n%!";
+    zero, minus_one)
   else if x < zero && abs x >= abs y
-  then (* Left quadrant *)
-    minus_one, zero
-  else (* Right quadrant *)
-    one, zero
+  then (
+    (* Left quadrant *)
+    printf "QUADRANT: LEFT\n%!";
+    one, zero)
+  else (
+    (* Right quadrant *)
+    printf "QUADRANT: RIGHT\n%!";
+    minus_one, zero)
 ;;
 
 let join ~server_url ~api_key player_key =
