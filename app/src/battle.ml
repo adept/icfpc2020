@@ -424,7 +424,7 @@ module Simulator = struct
         let new_pos = Vec2.add velocity pos in
         let velocity = Vec2.add velocity (gravity pos) in
         let ticks = ticks - 1 in
-        if intersects_planet pos new_pos || out_of_bounds pos new_pos
+        if intersects_planet pos new_pos (* || out_of_bounds pos new_pos *)
         then Some (max_ticks - ticks)
         else loop ~pos:new_pos ~velocity ~ticks)
     in
