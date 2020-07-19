@@ -64,7 +64,7 @@ module Vec2 = struct
     Eval.cons (Eval.var (Big_int.to_string x)) (Eval.var (Big_int.to_string y))
   ;;
 
-  let flip (x, y) =
+  let neg (x, y) =
     let open Big_int in
     neg x, neg y
   ;;
@@ -186,21 +186,23 @@ let game_response response =
 ;;
 
 let accelerate_cmd ~ship_id ~vector =
-  let open Encode in
-  of_eval_exn Eval.(encode_list [ var "0"; var ship_id; Vec2.to_eval vector ])
+  let open Eval in
+  encode_list [ var "0"; var (Big_int.to_string ship_id); Vec2.to_eval vector ]
 ;;
 
 let detonate_cmd ~ship_id =
-  let open Encode in
-  of_eval_exn Eval.(encode_list [ var "1"; var ship_id ])
+  let open Eval in
+  encode_list [ var "1"; var (Big_int.to_string ship_id) ]
 ;;
 
 let shoot_cmd ~ship_id ~target ~x3 =
-  let open Encode in
-  of_eval_exn
-    Eval.(
-      encode_list
-        [ var "2"; var ship_id; Vec2.to_eval target; var (Big_int.to_string x3) ])
+  let open Eval in
+  encode_list
+    [ var "2"
+    ; var (Big_int.to_string ship_id)
+    ; Vec2.to_eval target
+    ; var (Big_int.to_string x3)
+    ]
 ;;
 
 (** Returns a unit vector pointing to the planet from [pos]. *)
@@ -276,11 +278,19 @@ let run ~server_url ~player_key ~api_key =
     (match Game_info.stage info with
     | Finished -> ()
     | _ ->
-      let rec loop () =
-        let info = commands ~server_url ~api_key player_key [] in
+      let rec loop (info : Game_info.t) =
+        let cmds =
+          match info.our_ship with
+          | None ->
+            (* No ship :,() *)
+            []
+          | Some ({ id; pos; _ }, _) ->
+            [ accelerate_cmd ~ship_id:id ~vector:(Vec2.neg (planet_vec pos)) ]
+        in
+        let info = commands ~server_url ~api_key player_key cmds in
         match Game_info.stage info with
         | Finished -> ()
-        | _ -> loop ()
+        | _ -> loop info
       in
-      loop ())
+      loop info)
 ;;
