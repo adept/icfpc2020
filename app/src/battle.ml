@@ -58,7 +58,7 @@ module Role = struct
 end
 
 module Vec2 = struct
-  type t = int * int [@@deriving sexp_of]
+  type t = int * int [@@deriving sexp_of, equal]
 
   let of_eval t =
     Eval.(
@@ -71,6 +71,7 @@ module Vec2 = struct
   let to_eval (x, y) = Eval.cons (Eval.var (Int.to_string x)) (Eval.var (Int.to_string y))
   let neg (x, y) = Int.neg x, Int.neg y
   let add (x1, y1) (x2, y2) = x1 + x2, y1 + y2
+  let sub (x1, y1) (x2, y2) = x1 - x2, y1 - y2
 end
 
 module Ship_stats = struct
@@ -278,32 +279,14 @@ let gravity (x, y) =
 ;;
 
 (* the planet is -16 to 16 *)
-(* let safety_margin = 4
- * let will_hit_planet coord = coord >= -16 - safety_margin && coord >= 16 + safety_margin
- * 
- * let gravity_assist ~pos:(x, y) ~velocity (dx, dy) =
- *   let open Big_int in
- *   if y < zero && abs y >= abs x
- *   then (
- *     (\* Top quadrant *\)
- *     printf "QUADRANT: TOP\n%!";
- *     zero, one)
- *   else if y > zero && abs y >= abs x
- *   then (
- *     (\* Bottom quadrant *\)
- *     printf "QUADRANT: BOTTOM\n%!";
- *     zero, minus_one)
- *   else if x < zero && abs x >= abs y
- *   then (
- *     (\* Left quadrant *\)
- *     printf "QUADRANT: LEFT\n%!";
- *     one, zero)
- *   else (
- *     (\* Right quadrant *\)
- *     printf "QUADRANT: RIGHT\n%!";
- *     minus_one, zero)
- * ;; *)
+let safety_margin = 4
+let will_hit_planet coord = coord >= -16 - safety_margin && coord >= 16 + safety_margin
 
+(* sanity helpers *)
+let is_left x = x < 0
+let is_right x = x >= 0
+let is_above y = y < 0
+let is_below y = y >= 0
 let sign x = if x > 0 then 1 else if x < 0 then -1 else 0
 
 (* Accel away from the planet, broken *)
@@ -363,7 +346,64 @@ let commands ~server_url ~api_key player_key cmds =
 ;;
 
 module Simulator = struct
-  let in_planet (x, y) = -16 <= x && x <= 16 && -16 <= y && y <= 16
+  let side a b c =
+    let d = ((snd c - snd a) * (fst b - fst a)) - ((snd b - snd a) * (fst c - fst a)) in
+    if d > 0 then 1 else if d < 0 then -1 else 0
+  ;;
+
+  let is_point_in_closed_segment a b c =
+    if fst a < fst b
+    then fst a <= fst c && fst c <= fst b
+    else if fst b < fst a
+    then fst b <= fst c && fst c <= fst a
+    else if snd a < snd b
+    then snd a <= snd c && snd c <= snd b
+    else if snd b < snd a
+    then snd b <= snd c && snd c <= snd a
+    else fst a = fst c && snd a = snd c
+  ;;
+
+  let segments_intersect a b c d =
+    if Vec2.equal a b
+    then Vec2.equal a c || Vec2.equal a d
+    else if Vec2.equal c d
+    then Vec2.equal c a || Vec2.equal c b
+    else (
+      let s1 = side a b c in
+      let s2 = side a b d in
+      (* All points are collinear *)
+      if s1 = 0 && s2 = 0
+      then
+        is_point_in_closed_segment a b c
+        || is_point_in_closed_segment a b d
+        || is_point_in_closed_segment c d a
+        || is_point_in_closed_segment c d b
+      else if (* No touching and on the same side *)
+              s1 <> 0 && s1 = s2
+      then false
+      else (
+        let s1 = side c d a in
+        let s2 = side c d b in
+        (* No touching and on the same side *)
+        if s1 <> 0 && s1 = s2 then false else true))
+  ;;
+
+  let intersects_planet a b =
+    segments_intersect a b (-16, -16) (16, 16)
+    || segments_intersect a b (16, -16) (-16, 16)
+  ;;
+
+  let%expect_test _ =
+    printf "%b\n" (intersects_planet (5, -18) (-2, 13));
+    printf "%b\n" (intersects_planet (5, -18) (-18, -17));
+    printf "%b\n" (intersects_planet (-18, 15) (-6, 15));
+    [%expect {|
+      true
+      false
+      true |}]
+  ;;
+
+  (* let in_planet (x, y) = -16 <= x && x <= 16 && -16 <= y && y <= 16 *)
 
   (* How many ticks until we crash into the planet?  May return None. *)
   let planet_crash_eta ~pos ~velocity ~max_ticks =
@@ -372,10 +412,12 @@ module Simulator = struct
       then (* We did not crash. *)
         None
       else (
-        let pos = Vec2.add velocity pos in
+        let new_pos = Vec2.add velocity pos in
         let velocity = Vec2.add velocity (gravity pos) in
         let ticks = ticks - 1 in
-        if in_planet pos then Some (max_ticks - ticks) else loop ~pos ~velocity ~ticks)
+        if intersects_planet pos new_pos
+        then Some (max_ticks - ticks)
+        else loop ~pos:new_pos ~velocity ~ticks)
     in
     loop ~pos ~velocity ~ticks:max_ticks
   ;;
@@ -436,6 +478,40 @@ let maybe_movement_command ~id ~pos ~velocity =
     Some (accelerate_cmd ~ship_id:id ~vector)
 ;;
 
+let blindly_simulate ~pos ~velocity =
+  let ((dx, dy) as velocity) = Vec2.add velocity (gravity pos) in
+  let velocities =
+    [ dx, dy
+    ; dx - 1, dy
+    ; dx + 1, dy
+    ; dx, dy - 1
+    ; dx, dy + 1
+    ; dx + 1, dy + 1
+    ; dx - 1, dy - 1
+    ; dx + 1, dy - 1
+    ; dx - 1, dy + 1
+    ]
+  in
+  let fuel_cost = [ 0; 1; 1; 1; 1; 1; 1; 1; 1 ] in
+  let estimates =
+    List.zip_exn velocities fuel_cost
+    |> List.map ~f:(fun (velocity, cost) ->
+           let eta =
+             Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:256
+             |> Option.value ~default:256
+           in
+           (eta, cost), velocity)
+  in
+  let (eta, cost), best_velocity =
+    List.max_elt estimates ~compare:(fun (eta_cost1, _) (eta_cost2, _) ->
+        Poly.compare eta_cost1 eta_cost2)
+    |> Option.value_exn
+  in
+  let vec = Vec2.sub velocity best_velocity in
+  printf !"CHOSEN: ETA: %d, cost %d, vec: %{sexp:Vec2.t}\n" eta cost vec;
+  vec
+;;
+
 let run ~server_url ~player_key ~api_key =
   printf "VERSION: %s\n\n" version;
   let player_key = maybe_create ~server_url ~api_key player_key in
@@ -460,8 +536,13 @@ let run ~server_url ~player_key ~api_key =
             (* No ship :,() *)
             []
           | Some ({ id; pos; velocity; _ }, _) ->
+            printf
+              !"CRASH ETA: %{sexp: int option} ticks\n"
+              (Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:256);
             List.filter_opt
-              [ maybe_movement_command ~id ~pos ~velocity
+              [ (* maybe_movement_command ~id ~pos ~velocity *)
+                Some
+                  (accelerate_cmd ~ship_id:id ~vector:(blindly_simulate ~pos ~velocity))
               ; Option.map info.their_ship ~f:(fun (ship, _) ->
                     shoot_cmd
                       ~ship_id:id

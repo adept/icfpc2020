@@ -5,7 +5,8 @@
   cohttp-lwt-unix
   lambda
   zarith
-  )
+ )
+  (inline_tests)
  (preprocess (
    pps
    ppx_let
