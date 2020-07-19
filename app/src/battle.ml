@@ -1,5 +1,7 @@
 open Core
 
+let version = "0.99 DIR-FLIP-FIX"
+
 let maybe_create ~server_url ~api_key player_key =
   if String.equal player_key "ATTACK" || String.equal player_key "DEFEND"
   then (
@@ -303,6 +305,7 @@ let commands ~server_url ~api_key player_key cmds =
 ;;
 
 let run ~server_url ~player_key ~api_key =
+  printf "VERSION: %s\n\n" version;
   let player_key = maybe_create ~server_url ~api_key player_key in
   let info = join ~server_url ~api_key player_key in
   match Game_info.stage info with
@@ -325,7 +328,7 @@ let run ~server_url ~player_key ~api_key =
             (* No ship :,() *)
             []
           | Some ({ id; pos; _ }, _) ->
-            [ accelerate_cmd ~ship_id:id ~vector:(Vec2.neg (planet_vec pos)) ]
+            [ accelerate_cmd ~ship_id:id ~vector:(planet_vec pos) ]
         in
         let info = commands ~server_url ~api_key player_key cmds in
         match Game_info.stage info with
