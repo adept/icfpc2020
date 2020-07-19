@@ -1,15 +1,5 @@
 open! Core
 
-module Big_int : sig
-  open! Big_int_Z
-
-  type t = Z.t [@@deriving sexp_of]
-
-  val big_int_of_string : string -> t
-  val zero : t
-  val is_zero : t -> bool
-end
-
 type t =
   { mutable evaluated : t option
   ; u : u

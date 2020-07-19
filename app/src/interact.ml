@@ -81,7 +81,7 @@ let rec interact ~protocol ~state ~vector ~eval ~api_key =
   match flag.u with
   | App _ -> raise_s [%sexp "Unexpected flag value"]
   | Var x ->
-    (match Eval.Big_int.is_zero (Eval.Big_int.big_int_of_string x) with
+    (match Big_int.is_zero (Big_int.of_string x) with
     | exception exn ->
       raise_s
         [%sexp

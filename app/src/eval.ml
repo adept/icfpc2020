@@ -1,19 +1,5 @@
 open! Core
 
-module Big_int = struct
-  include Big_int_Z
-
-  type t = big_int
-
-  let zero = zero_big_int
-  let to_string = string_of_big_int
-
-  (* let one = big_int_of_int 1 *)
-  (* let minus_one = big_int_of_int (-1) *)
-  let is_zero t = eq_big_int zero t
-  let sexp_of_t t = Sexp.of_string (string_of_big_int t)
-end
-
 type t =
   { mutable evaluated : (t[@sexp.opaque]) option
   ; u : u
@@ -66,7 +52,7 @@ let cdr { u; _ } =
 
 let is_int str =
   try
-    let (_ : Big_int.t) = Big_int.big_int_of_string str in
+    let (_ : Big_int.t) = Big_int.of_string str in
     true
   with
   | _ -> false
@@ -136,7 +122,7 @@ let base_defs = String.Map.empty
 
 let to_int_exn t =
   match t.u with
-  | Var str -> Big_int.big_int_of_string str
+  | Var str -> Big_int.of_string str
   | _ -> raise_s [%sexp "Not a number", (t : t)]
 ;;
 
@@ -185,23 +171,23 @@ and eval_once t ~verbose ~defs =
         | Var "add" ->
           var
             (Big_int.to_string
-               (Big_int.add_big_int (to_int_exn (eval x)) (to_int_exn (eval y))))
+               (Big_int.( + ) (to_int_exn (eval x)) (to_int_exn (eval y))))
         | Var "mul" ->
           var
             (Big_int.to_string
-               (Big_int.mult_big_int (to_int_exn (eval x)) (to_int_exn (eval y))))
+               (Big_int.( * ) (to_int_exn (eval x)) (to_int_exn (eval y))))
         | Var "div" ->
           var
             (Big_int.to_string
-               (Big_int.div_big_int (to_int_exn (eval y)) (to_int_exn (eval x))))
+               (Big_int.( / ) (to_int_exn (eval y)) (to_int_exn (eval x))))
         | Var "lt" ->
           var
-            (if Big_int.lt_big_int (to_int_exn (eval y)) (to_int_exn (eval x))
+            (if Big_int.( < ) (to_int_exn (eval y)) (to_int_exn (eval x))
             then "t"
             else "f")
         | Var "eq" ->
           var
-            (if Big_int.eq_big_int (to_int_exn (eval x)) (to_int_exn (eval y))
+            (if Big_int.equal (to_int_exn (eval x)) (to_int_exn (eval y))
             then "t"
             else "f")
         | Var "cons" -> eval_cons y x ~verbose ~defs
