@@ -514,8 +514,11 @@ let blindly_simulate ~pos ~velocity =
 let maybe_detonate our_ship their_ship =
   match our_ship, their_ship with
   | Some (our_ship, _), Some (their_ship, _) ->
+    (* Blast radius is 10, not knowing their command could introduce
+       an error of 1, and not knowing our is another one, so at most
+       we are wrong by 2 But we use 7, to be on the safe side. *)
     if Vec2.radius (Ship.next_pos_estimate our_ship) (Ship.next_pos_estimate their_ship)
-       <= 5
+       <= 7
     then Some (detonate_cmd ~ship_id:our_ship.id)
     else None
   | _ -> None
