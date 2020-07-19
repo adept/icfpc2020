@@ -10,6 +10,7 @@ let two = big_int_of_int 2
 let to_string = string_of_big_int
 let of_string = big_int_of_string
 let of_int = big_int_of_int
+let to_int_exn = int_of_big_int
 let neg = mult_int_big_int ~-1
 let abs = abs_big_int
 let ( + ) = add_big_int

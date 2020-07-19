@@ -58,20 +58,19 @@ module Role = struct
 end
 
 module Vec2 = struct
-  type t = Big_int.t * Big_int.t [@@deriving sexp_of]
+  type t = int * int [@@deriving sexp_of]
 
-  let of_eval t = Eval.(tuple2 to_int_exn to_int_exn t)
-
-  let to_eval (x, y) =
-    Eval.cons (Eval.var (Big_int.to_string x)) (Eval.var (Big_int.to_string y))
+  let of_eval t =
+    Eval.(
+      tuple2
+        (fun x -> to_int_exn x |> Big_int.to_int_exn)
+        (fun x -> to_int_exn x |> Big_int.to_int_exn)
+        t)
   ;;
 
-  let neg (x, y) =
-    let open Big_int in
-    neg x, neg y
-  ;;
-
-  let add (x1, y1) (x2, y2) = Big_int_Z.add_big_int x1 x2, Big_int_Z.add_big_int y1 y2
+  let to_eval (x, y) = Eval.cons (Eval.var (Int.to_string x)) (Eval.var (Int.to_string y))
+  let neg (x, y) = Int.neg x, Int.neg y
+  let add (x1, y1) (x2, y2) = x1 + x2, y1 + y2
 end
 
 module Ship_stats = struct
@@ -257,42 +256,37 @@ let shoot_cmd ~ship_id ~target ~x3 =
 
 (** Returns a unit vector pointing to the planet from [pos]. *)
 let quadrants (x, y) =
-  let open Big_int in
-  if y < zero && abs y >= abs x
+  if y < 0 && Int.abs y >= Int.abs x
   then (
     (* Top quadrant *)
     printf "QUADRANT: TOP\n%!";
-    zero, one)
-  else if y > zero && abs y >= abs x
+    0, 1)
+  else if y > 0 && Int.abs y >= Int.abs x
   then (
     (* Bottom quadrant *)
     printf "QUADRANT: BOTTOM\n%!";
-    zero, minus_one)
-  else if x < zero && abs x >= abs y
+    0, -1)
+  else if x < 0 && Int.abs x >= Int.abs y
   then (
     (* Left quadrant *)
     printf "QUADRANT: LEFT\n%!";
-    one, zero)
+    1, 0)
   else (
     (* Right quadrant *)
     printf "QUADRANT: RIGHT\n%!";
-    minus_one, zero)
+    -1, 0)
 ;;
 
 let sign x = if x > 0 then 1 else if x < 0 then -1 else 0
 
 (* Accel away from the planet, broken *)
 let away_from_planet (x, y) =
-  let x = Big_int_Z.int_of_big_int x in
-  let y = Big_int_Z.int_of_big_int y in
   let x = if x >= -16 || x <= 16 then 0 else -sign x in
   let y = if y >= -16 || y <= 16 then 0 else -sign y in
-  Big_int.of_int x, Big_int.of_int y
+  x, y
 ;;
 
-let towards (x, y) =
-  Big_int.of_int (Big_int_Z.sign_big_int x), Big_int.of_int (Big_int_Z.sign_big_int y)
-;;
+let towards (x, y) = sign x, sign y
 
 let join ~server_url ~api_key player_key =
   let join_msg =
