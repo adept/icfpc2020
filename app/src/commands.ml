@@ -42,32 +42,6 @@ let commands =
            fun () ->
              Map.iteri (Eval.load_defs_exn ~filename) ~f:(fun ~key:name ~data:expansion ->
                  printf "%10s := %s\n" name (Eval.to_string_hum expansion))) )
-    ; ( "interact-galaxy"
-      , Command.basic
-          ~summary:"Interact with a galaxy.txt"
-          (let%map_open filename = anon ("FILE" %: Filename.arg_type)
-           and protocol =
-             flag
-               "-protocol"
-               (optional_with_default "galaxy" string)
-               ~doc:"TERM The protocol to run"
-           and state =
-             flag
-               "-state"
-               (optional_with_default "nil" string)
-               ~doc:"TERM The initial state of the protocol"
-           and vector =
-             flag
-               "-vector"
-               (optional_with_default "ap ap cons 0 0" string)
-               ~doc:"TERM The initial vector to give to the protocol"
-           and api_key =
-             flag
-               "-api-key"
-               (required string)
-               ~doc:"API-KEY API-KEY for identifying with the server"
-           in
-           fun () -> Interact.run ~filename ~protocol ~state ~vector ~api_key) )
     ; ( "battle"
       , Command.basic
           ~summary:"Connect to the tournament server"
