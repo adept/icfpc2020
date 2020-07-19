@@ -72,6 +72,7 @@ module Vec2 = struct
   let neg (x, y) = Int.neg x, Int.neg y
   let add (x1, y1) (x2, y2) = x1 + x2, y1 + y2
   let sub (x1, y1) (x2, y2) = x1 - x2, y1 - y2
+  let radius (x1, y1) (x2, y2) = max (abs (x1 - x2)) (abs (y1 - y2))
 end
 
 module Ship_stats = struct
@@ -111,6 +112,25 @@ module Ship_stats = struct
   ;;
 end
 
+(** Returns a unit vector pointing to the planet from [pos]. *)
+let gravity (x, y) =
+  if y < 0 && Int.abs y >= Int.abs x
+  then (* Top quadrant *)
+       (* printf "QUADRANT: TOP\n%!"; *)
+    0, 1
+  else if y > 0 && Int.abs y >= Int.abs x
+  then (* Bottom quadrant *)
+       (* printf "QUADRANT: BOTTOM\n%!"; *)
+    0, -1
+  else if x < 0 && Int.abs x >= Int.abs y
+  then (* Left quadrant *)
+       (* printf "QUADRANT: LEFT\n%!"; *)
+    1, 0
+  else (* Right quadrant *)
+       (* printf "QUADRANT: RIGHT\n%!"; *)
+    -1, 0
+;;
+
 module Ship = struct
   type t =
     { role : Role.t
@@ -123,6 +143,8 @@ module Ship = struct
     ; x7 : Big_int.t
     }
   [@@deriving fields]
+
+  let next_pos_estimate t = Vec2.add t.pos (Vec2.add t.velocity (gravity t.pos))
 
   let sexp_of_t { role; id; pos; velocity; stats; x5; x6; x7 } =
     [%sexp
@@ -257,25 +279,6 @@ let shoot_cmd ~ship_id ~target ~x3 =
     ; Vec2.to_eval target
     ; var (Big_int.to_string x3)
     ]
-;;
-
-(** Returns a unit vector pointing to the planet from [pos]. *)
-let gravity (x, y) =
-  if y < 0 && Int.abs y >= Int.abs x
-  then (* Top quadrant *)
-       (* printf "QUADRANT: TOP\n%!"; *)
-    0, 1
-  else if y > 0 && Int.abs y >= Int.abs x
-  then (* Bottom quadrant *)
-       (* printf "QUADRANT: BOTTOM\n%!"; *)
-    0, -1
-  else if x < 0 && Int.abs x >= Int.abs y
-  then (* Left quadrant *)
-       (* printf "QUADRANT: LEFT\n%!"; *)
-    1, 0
-  else (* Right quadrant *)
-       (* printf "QUADRANT: RIGHT\n%!"; *)
-    -1, 0
 ;;
 
 (* the planet is -16 to 16 *)
@@ -508,6 +511,16 @@ let blindly_simulate ~pos ~velocity =
   vec
 ;;
 
+let maybe_detonate our_ship their_ship =
+  match our_ship, their_ship with
+  | Some (our_ship, _), Some (their_ship, _) ->
+    if Vec2.radius (Ship.next_pos_estimate our_ship) (Ship.next_pos_estimate their_ship)
+       <= 5
+    then Some (detonate_cmd ~ship_id:our_ship.id)
+    else None
+  | _ -> None
+;;
+
 let run ~server_url ~player_key ~api_key =
   printf "VERSION: %s\n\n" version;
   let player_key = maybe_create ~server_url ~api_key player_key in
@@ -531,7 +544,7 @@ let run ~server_url ~player_key ~api_key =
           | None ->
             (* No ship :,() *)
             []
-          | Some ({ id; pos; velocity; _ }, _) ->
+          | Some ({ id; role; pos; velocity; _ }, _) ->
             printf
               !"CRASH ETA: %{sexp: int option} ticks\n"
               (Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:256);
@@ -539,11 +552,13 @@ let run ~server_url ~player_key ~api_key =
               [ (* maybe_movement_command ~id ~pos ~velocity *)
                 Some
                   (accelerate_cmd ~ship_id:id ~vector:(blindly_simulate ~pos ~velocity))
+              ; (if Role.equal role Role.Defender
+                then None
+                else maybe_detonate info.our_ship info.their_ship)
               ; Option.map info.their_ship ~f:(fun (ship, _) ->
                     shoot_cmd
                       ~ship_id:id
-                      ~target:
-                        (Vec2.add ship.pos (Vec2.add ship.velocity (gravity ship.pos)))
+                      ~target:(Ship.next_pos_estimate ship)
                       ~x3:Big_int.one)
               ]
         in
