@@ -1,10 +1,9 @@
-(library
- (name icfpc2020)
+(executable
+ (name galaxy_pad)
  (libraries
   core
-  cohttp-lwt-unix
-  lambda
-  zarith
+  icfpc2020
+  graphics
   )
  (preprocess (
    pps
