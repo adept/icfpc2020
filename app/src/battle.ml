@@ -389,8 +389,10 @@ module Simulator = struct
   ;;
 
   let intersects_planet a b =
-    segments_intersect a b (-16, -16) (16, 16)
-    || segments_intersect a b (16, -16) (-16, 16)
+    segments_intersect a b (16, -16) (16, 16)
+    || segments_intersect a b (-16, -16) (-16, 16)
+    || segments_intersect a b (-16, -16) (16, -16)
+    || segments_intersect a b (-16, 16) (16, 16)
   ;;
 
   let%expect_test _ =
