@@ -3,6 +3,7 @@ open! Big_int_Z
 
 type t = Z.t [@@deriving sexp_of]
 
+val minus_one : t
 val zero : t
 val one : t
 val two : t
@@ -12,13 +13,17 @@ val of_int : int -> t
 
 (** Ops  *)
 
+val abs : t -> t
+val neg : t -> t
 val ( + ) : t -> t -> t
 val ( - ) : t -> t -> t
 val ( * ) : t -> t -> t
 val ( / ) : t -> t -> t
 val mod_big_int : t -> t -> t
 val ( < ) : t -> t -> bool
+val ( <= ) : t -> t -> bool
 val ( = ) : t -> t -> bool
+val ( > ) : t -> t -> bool
 val ( >= ) : t -> t -> bool
 val equal : t -> t -> bool
 val mult_int_big_int : int -> t -> t
