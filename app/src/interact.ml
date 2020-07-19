@@ -2,9 +2,8 @@ open! Core
 module G = Graphics
 
 let pixel_size = 10
-let pixel_shift = 16
 
-let put_pixel (x, y) =
+let put_pixel pixel_shift (x, y) =
   G.fill_rect
     ((pixel_shift + x) * pixel_size)
     ((pixel_shift - y) * pixel_size)
@@ -12,19 +11,24 @@ let put_pixel (x, y) =
     pixel_size
 ;;
 
-let draw_picture pic = List.iter ~f:put_pixel pic
+let draw_picture pixel_shift pic = List.iter ~f:(put_pixel pixel_shift) pic
 
 (* i-th gray *)
 let color color_step i = G.rgb (i * color_step) (i * color_step) (i * color_step)
 
-let draw_pictures pics =
-  let color_step = 255 / List.length pics in
-  List.iteri pics ~f:(fun i pic ->
-      G.set_color (color color_step i);
-      draw_picture pic)
+let min_neg_coord pics =
+  List.fold ~init:0 pics ~f:(fun acc pic ->
+      List.fold ~init:acc pic ~f:(fun acc (x, y) -> min (min acc x) y))
 ;;
 
-let get_click () =
+let draw_pictures pixel_shift pics =
+  let color_step = 250 / List.length pics in
+  List.iteri (List.rev pics) ~f:(fun i pic ->
+      G.set_color (color color_step i);
+      draw_picture pixel_shift pic)
+;;
+
+let get_click pixel_shift () =
   G.moveto 10 10;
   G.set_color G.black;
   G.draw_string "Click on pixel";
@@ -68,8 +72,9 @@ let rec interact ~protocol ~state ~vector ~eval =
       let pictures = Eval.decode_vector vector in
       printf !"pictures = %{sexp:(int*int) list list}\n%!" pictures;
       G.clear_graph ();
-      draw_pictures pictures;
-      let x, y = get_click () in
+      let pixel_shift = -min_neg_coord pictures + 10 in
+      draw_pictures pixel_shift pictures;
+      let x, y = get_click pixel_shift () in
       let clicked =
         Eval.(app (app (var "cons") (var (Int.to_string x))) (var (Int.to_string y)))
       in
