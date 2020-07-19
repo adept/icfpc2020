@@ -25,7 +25,7 @@ let compute_pixel_shift pics =
 ;;
 
 let draw_pictures pixel_shift pics =
-  let color_step = 250 / List.length pics in
+  let color_step = 255 - (255 / List.length pics) in
   List.iteri (List.rev pics) ~f:(fun i pic ->
       G.set_color (color color_step i);
       draw_picture pixel_shift pic)
@@ -75,6 +75,8 @@ let rec interact ~protocol ~state ~vector ~eval =
       let pictures = Eval.decode_vector vector in
       printf !"pictures = %{sexp:(int*int) list list}\n%!" pictures;
       G.clear_graph ();
+      G.set_color G.black;
+      G.fill_rect 0 0 (G.size_x ()) (G.size_y ());
       let pixel_shift = compute_pixel_shift pictures in
       draw_pictures pixel_shift pictures;
       let x, y = get_click pixel_shift () in
