@@ -486,7 +486,7 @@ let maybe_movement_command ~id ~pos ~velocity =
     Some (accelerate_cmd ~ship_id:id ~vector)
 ;;
 
-let blindly_simulate ~pos ~velocity =
+let avoid_planet_in_a_fuel_efficient_way ~pos ~velocity =
   let velocity = Vec2.add velocity (gravity pos) in
   let velocity_changes = [ 0, 0; -1, 0; 1, 0; 0, -1; 0, 1; 1, 1; -1, -1; 1, -1; -1, 1 ] in
   let fuel_cost = [ 0; 1; 1; 1; 1; 1; 1; 1; 1 ] in
@@ -509,6 +509,99 @@ let blindly_simulate ~pos ~velocity =
   let vec = Vec2.sub (0, 0) best_velocity_change in
   printf !"CHOSEN: ETA: %d, cost %d, vec: %{sexp:Vec2.t}\n" eta cost vec;
   vec
+;;
+
+(* at 10 ticks to crash or less take evasive actions *)
+let evasive_action_limit = 10
+let safe_distance = 64
+
+let steering our_ship their_ship =
+  match our_ship, their_ship with
+  | Some ((our_ship : Ship.t), _), Some ((their_ship : Ship.t), _) ->
+    let current_distance = Vec2.radius our_ship.pos their_ship.pos in
+    let eta =
+      Simulator.planet_crash_eta
+        ~pos:our_ship.pos
+        ~velocity:our_ship.velocity
+        ~max_ticks:256
+      |> Option.value ~default:256
+    in
+    if eta <= evasive_action_limit
+    then
+      avoid_planet_in_a_fuel_efficient_way ~pos:our_ship.pos ~velocity:our_ship.velocity
+    else (
+      let velocity_changes =
+        [ 0, 0; -1, 0; 1, 0; 0, -1; 0, 1; 1, 1; -1, -1; 1, -1; -1, 1 ]
+      in
+      let fuel_cost = [ 0; 1; 1; 1; 1; 1; 1; 1; 1 ] in
+      (* are we going towards the enemy ship or away from it? *)
+      let cost_f, bad_distance_f =
+        match our_ship.role with
+        | Role.Attacker -> (fun a b -> compare a b), fun _ -> false
+        | Role.Defender -> (fun a b -> compare b a), fun d -> d >= safe_distance
+      in
+      let estimates =
+        List.zip_exn velocity_changes fuel_cost
+        |> List.filter_map ~f:(fun (velocity_change, cost) ->
+               let our_ship =
+                 { our_ship with velocity = Vec2.add our_ship.velocity velocity_change }
+               in
+               (* Make sure this does not make us crash *)
+               let eta =
+                 Simulator.planet_crash_eta
+                   ~pos:our_ship.pos
+                   ~velocity:our_ship.velocity
+                   ~max_ticks:256
+                 |> Option.value ~default:256
+               in
+               if eta <= evasive_action_limit
+               then None
+               else (
+                 let our_pos = Ship.next_pos_estimate our_ship in
+                 let their_pos = Ship.next_pos_estimate their_ship in
+                 let distance = Vec2.radius our_pos their_pos in
+                 if bad_distance_f distance
+                 then None
+                 else Some ((distance, cost, eta), velocity_change)))
+      in
+      if List.is_empty estimates
+      then
+        avoid_planet_in_a_fuel_efficient_way ~pos:our_ship.pos ~velocity:our_ship.velocity
+      else (
+        let estimates =
+          List.sort
+            estimates
+            ~compare:(fun ((dist1, cost1, eta1), _) ((dist2, cost2, eta2), _) ->
+              let dist_cmp = cost_f dist1 dist2 in
+              if dist_cmp <> 0
+              then dist_cmp
+              else (
+                let cost_cmp = compare cost1 cost2 in
+                if cost_cmp = 0 then compare eta2 eta1 else cost_cmp))
+        in
+        List.iteri estimates ~f:(fun i ((dist, cost, eta), change) ->
+            printf
+              !"ESTIMATE[%d]: dist %d cost %d eta %d vector %{sexp:Vec2.t}\n%!"
+              i
+              dist
+              cost
+              eta
+              change);
+        let (distance, cost, eta), best_velocity_change = List.hd_exn estimates in
+        let vec = Vec2.sub (0, 0) best_velocity_change in
+        printf
+          !"CHOSEN: eta %d current distance %d coast distance: %d steering distance: %d, \
+            cost %d, vec: %{sexp:Vec2.t}\n"
+          eta
+          current_distance
+          (Vec2.radius
+             (Ship.next_pos_estimate our_ship)
+             (Ship.next_pos_estimate their_ship))
+          distance
+          cost
+          vec;
+        vec))
+  | _ -> 0, 0
 ;;
 
 let maybe_detonate our_ship their_ship =
@@ -554,7 +647,9 @@ let run ~server_url ~player_key ~api_key =
             List.filter_opt
               [ (* maybe_movement_command ~id ~pos ~velocity *)
                 Some
-                  (accelerate_cmd ~ship_id:id ~vector:(blindly_simulate ~pos ~velocity))
+                  (accelerate_cmd
+                     ~ship_id:id
+                     ~vector:(steering info.our_ship info.their_ship))
               ; (if Role.equal role Role.Defender
                 then None
                 else maybe_detonate info.our_ship info.their_ship)
