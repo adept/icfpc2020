@@ -116,14 +116,14 @@ module Ship = struct
     }
   [@@deriving fields]
 
-  let sexp_of_t { role; id; pos; velocity; x4; x5; x6; x7 } =
+  let sexp_of_t { role; id; pos; velocity; stats; x5; x6; x7 } =
     [%sexp
       "Ship"
       , { role : Role.t
         ; id : Big_int.t
         ; pos : Vec2.t
         ; velocity : Vec2.t
-        ; x4 : string = Eval.to_string_mach x4
+        ; stats : Ship_stats.t
         ; x5 : Big_int.t
         ; x6 : Big_int.t
         ; x7 : Big_int.t
