@@ -155,7 +155,9 @@ module Ship = struct
     }
   [@@deriving fields]
 
-  let next_pos_estimate t = Vec2.add t.pos (Vec2.add t.velocity (gravity t.pos))
+  let next_pos_estimate t ~acceleration =
+    t.pos |> Vec2.add t.velocity |> Vec2.add acceleration |> Vec2.add (gravity t.pos)
+  ;;
 
   let sexp_of_t { role; id; pos; velocity; stats; x5; x6; x7 } =
     [%sexp
@@ -574,13 +576,21 @@ let avoid_planet_in_a_fuel_efficient_way ~pos ~velocity =
   vec
 ;;
 
+let get_acceleration (commands : Ship_command.t list) =
+  List.find_map commands ~f:(function
+      | Accelerate { vector; _ } -> Some vector
+      | _ -> None)
+  |> Option.value ~default:(0, 0)
+;;
+
 (* at 10 ticks to crash or less take evasive actions *)
 let evasive_action_limit = 10
 let safe_distance = 64
 
 let steering our_ship their_ship =
   match our_ship, their_ship with
-  | Some ((our_ship : Ship.t), _), Some ((their_ship : Ship.t), _) ->
+  | Some ((our_ship : Ship.t), our_commands), Some ((their_ship : Ship.t), their_commands)
+    ->
     let current_distance = Vec2.radius our_ship.pos their_ship.pos in
     let eta =
       Simulator.planet_crash_eta
@@ -620,8 +630,16 @@ let steering our_ship their_ship =
                if eta <= evasive_action_limit
                then None
                else (
-                 let our_pos = Ship.next_pos_estimate our_ship in
-                 let their_pos = Ship.next_pos_estimate their_ship in
+                 let our_pos =
+                   Ship.next_pos_estimate
+                     our_ship
+                     ~acceleration:(get_acceleration our_commands)
+                 in
+                 let their_pos =
+                   Ship.next_pos_estimate
+                     their_ship
+                     ~acceleration:(get_acceleration their_commands)
+                 in
                  let distance = Vec2.radius our_pos their_pos in
                  if bad_distance_f distance
                  then None
@@ -658,8 +676,12 @@ let steering our_ship their_ship =
           eta
           current_distance
           (Vec2.radius
-             (Ship.next_pos_estimate our_ship)
-             (Ship.next_pos_estimate their_ship))
+             (Ship.next_pos_estimate
+                our_ship
+                ~acceleration:(get_acceleration our_commands))
+             (Ship.next_pos_estimate
+                their_ship
+                ~acceleration:(get_acceleration their_commands)))
           distance
           cost
           vec;
@@ -669,11 +691,15 @@ let steering our_ship their_ship =
 
 let maybe_detonate our_ship their_ship =
   match our_ship, their_ship with
-  | Some (our_ship, _), Some (their_ship, _) ->
+  | Some (our_ship, our_commands), Some (their_ship, their_commands) ->
     (* Blast radius is 10, not knowing their command could introduce
        an error of 1, and not knowing our is another one, so at most
        we are wrong by 2 But we use 7, to be on the safe side. *)
-    if Vec2.radius (Ship.next_pos_estimate our_ship) (Ship.next_pos_estimate their_ship)
+    if Vec2.radius
+         (Ship.next_pos_estimate our_ship ~acceleration:(get_acceleration our_commands))
+         (Ship.next_pos_estimate
+            their_ship
+            ~acceleration:(get_acceleration their_commands))
        <= 7
     then Some (detonate_cmd ~ship_id:our_ship.id)
     else None
@@ -716,10 +742,15 @@ let run ~server_url ~player_key ~api_key =
               ; (if Role.equal role Role.Defender
                 then None
                 else maybe_detonate info.our_ship info.their_ship)
-              ; Option.map info.their_ship ~f:(fun (ship, _) ->
+              ; Option.map
+                  info.their_ship
+                  ~f:(fun (ship, (their_commands : Ship_command.t list)) ->
                     shoot_cmd
                       ~ship_id:id
-                      ~target:(Ship.next_pos_estimate ship)
+                      ~target:
+                        (Ship.next_pos_estimate
+                           ship
+                           ~acceleration:(get_acceleration their_commands))
                       ~x3:Big_int.one)
               ]
         in
