@@ -477,35 +477,26 @@ let maybe_movement_command ~id ~pos ~velocity =
 ;;
 
 let blindly_simulate ~pos ~velocity =
-  let ((dx, dy) as velocity) = Vec2.add velocity (gravity pos) in
-  let velocities =
-    [ dx, dy
-    ; dx - 1, dy
-    ; dx + 1, dy
-    ; dx, dy - 1
-    ; dx, dy + 1
-    ; dx + 1, dy + 1
-    ; dx - 1, dy - 1
-    ; dx + 1, dy - 1
-    ; dx - 1, dy + 1
-    ]
-  in
+  let velocity = Vec2.add velocity (gravity pos) in
+  let velocity_changes = [ 0, 0; -1, 0; 1, 0; 0, -1; 0, 1; 1, 1; -1, -1; 1, -1; -1, 1 ] in
   let fuel_cost = [ 0; 1; 1; 1; 1; 1; 1; 1; 1 ] in
   let estimates =
-    List.zip_exn velocities fuel_cost
-    |> List.map ~f:(fun (velocity, cost) ->
+    List.zip_exn velocity_changes fuel_cost
+    |> List.map ~f:(fun (velocity_change, cost) ->
+           let velocity = Vec2.add velocity velocity_change in
            let eta =
              Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:256
              |> Option.value ~default:256
            in
-           (eta, cost), velocity)
+           (eta, cost), velocity_change)
   in
-  let (eta, cost), best_velocity =
-    List.max_elt estimates ~compare:(fun (eta_cost1, _) (eta_cost2, _) ->
-        Poly.compare eta_cost1 eta_cost2)
+  let (eta, cost), best_velocity_change =
+    List.max_elt estimates ~compare:(fun ((eta1, cost1), _) ((eta2, cost2), _) ->
+        let eta_cmp = compare eta1 eta2 in
+        if eta_cmp = 0 then compare cost2 cost1 else eta_cmp)
     |> Option.value_exn
   in
-  let vec = Vec2.sub velocity best_velocity in
+  let vec = Vec2.sub (0, 0) best_velocity_change in
   printf !"CHOSEN: ETA: %d, cost %d, vec: %{sexp:Vec2.t}\n" eta cost vec;
   vec
 ;;
