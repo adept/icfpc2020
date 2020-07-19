@@ -65,7 +65,7 @@ module Game_info = struct
     ; x1 : Eval.t
     ; ships_commands : Eval.t
     }
-  [@@deriving sexp_of]
+  [@@deriving fields, sexp_of]
 
   let of_eval stage info state =
     printf !"INFO: %{Eval#hum}\n%!" info;
@@ -112,7 +112,7 @@ let join ~api_key player_key =
 ;;
 
 let start ~api_key player_key =
-  let join_msg =
+  let start_msg =
     Encode.(
       encode
         (of_eval_exn
@@ -123,15 +123,35 @@ let start ~api_key player_key =
                ; encode_list [ var "20"; var "20"; var "20"; var "1" ]
                ])))
   in
-  let response = Http.send_api_exn ~api_key ~method_path:"aliens/send" join_msg in
+  let response = Http.send_api_exn ~api_key ~method_path:"aliens/send" start_msg in
   printf !"START RESP: %{Encode#mach}\n" response;
   let game_info = game_response (Encode.to_eval response) in
   printf !"GAME INFO: %{sexp: Game_info.t}\n" game_info;
-  ()
+  game_info
+;;
+
+let commands ~api_key player_key cmds =
+  let commands_msg =
+    Encode.(
+      encode
+        (of_eval_exn Eval.(encode_list [ var "4"; var player_key; encode_list cmds ])))
+  in
+  let response = Http.send_api_exn ~api_key ~method_path:"aliens/send" commands_msg in
+  printf !"COMMANDS RESP: %{Encode#mach}\n" response;
+  let game_info = game_response (Encode.to_eval response) in
+  printf !"GAME INFO: %{sexp: Game_info.t}\n" game_info;
+  game_info
 ;;
 
 let run ~server_url:_ ~player_key ~api_key =
   let player_key = maybe_create ~api_key player_key in
   let _info = join ~api_key player_key in
-  start ~api_key player_key
+  let _info = start ~api_key player_key in
+  let rec loop () =
+    let info = commands ~api_key player_key [] in
+    match Game_info.stage info with
+    | Finished -> ()
+    | _ -> loop ()
+  in
+  loop ()
 ;;
