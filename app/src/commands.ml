@@ -72,7 +72,12 @@ let commands =
                "-vector"
                (optional_with_default "ap ap cons 0 0" string)
                ~doc:"TERM The initial vector to give to the protocol"
+           and api_key =
+             flag
+               "-api-key"
+               (required string)
+               ~doc:"API-KEY API-KEY for identifying with the server"
            in
-           fun () -> Interact.run ~filename ~protocol ~state ~vector) )
+           fun () -> Interact.run ~filename ~protocol ~state ~vector ~api_key) )
     ]
 ;;

@@ -61,7 +61,7 @@ let get_click (shift_x, shift_y) () =
   x, y
 ;;
 
-let rec interact ~protocol ~state ~vector ~eval =
+let rec interact ~protocol ~state ~vector ~eval ~api_key =
   printf
     !"\n\
       Interact:\n\
@@ -82,6 +82,10 @@ let rec interact ~protocol ~state ~vector ~eval =
   | App _ -> raise_s [%sexp "Unexpected flag value"]
   | Var x ->
     (match Eval.Big_int.is_zero (Eval.Big_int.big_int_of_string x) with
+    | exception exn ->
+      raise_s
+        [%sexp
+          "Flag is not a number", { flag : string = Eval.to_string_hum flag; exn : Exn.t }]
     | true ->
       printf !"newState = %{Eval#hum}\n%!" newState;
       let pictures = Eval.decode_vector vector in
@@ -95,20 +99,25 @@ let rec interact ~protocol ~state ~vector ~eval =
       let clicked =
         Eval.(app (app (var "cons") (var (Int.to_string x))) (var (Int.to_string y)))
       in
-      interact ~protocol ~state:newState ~vector:clicked ~eval
-    | false | (exception _) ->
+      interact ~protocol ~state:newState ~vector:clicked ~eval ~api_key
+    | false ->
+      let data = Encode.of_eval_exn vector in
+      printf !"Would like to send: %{sexp: Encode.t}\n%!" data;
       printf "\nPOSTing... Continue? (Ctrl-C to quit)\n%!";
       let (_ : string) = In_channel.input_line_exn In_channel.stdin in
-      (* (\* TODO : send *\)
-       * interact ~protocol ~state ~vector ~eval *)
-      failwith "flag = 1 not implemented")
+      let vector =
+        Http.send_api_exn ~api_key ~method_path:"aliens/send" (Encode.encode data)
+        |> Encode.to_eval
+      in
+      printf "Received: %s\n%!" (Eval.to_string_hum vector);
+      interact ~protocol ~state:newState ~vector ~eval ~api_key)
 ;;
 
-let run ~filename ~protocol ~state ~vector =
+let run ~filename ~protocol ~state ~vector ~api_key =
   G.open_graph " 1000x1000";
   G.set_window_title "Messages From Space";
   let defs = Eval.load_defs_exn ~filename in
   let p str = Eval.parse_exn (String.split ~on:' ' str) in
   let eval = Eval.eval_custom ~verbose:false ~defs in
-  interact ~protocol:(p protocol) ~state:(p state) ~vector:(p vector) ~eval
+  interact ~protocol:(p protocol) ~state:(p state) ~vector:(p vector) ~eval ~api_key
 ;;

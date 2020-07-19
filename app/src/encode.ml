@@ -115,3 +115,19 @@ let rec to_string_mach = function
   | Nil -> "nil"
   | Cons (x, y) -> "ap ap cons " ^ to_string_mach x ^ " " ^ to_string_mach y
 ;;
+
+let rec to_eval = function
+  | Nil -> Eval.var "nil"
+  | Number n -> Eval.var (Int.to_string n)
+  | Cons (x, y) -> Eval.app (Eval.app (Eval.var "cons") (to_eval x)) (to_eval y)
+;;
+
+let rec of_eval_exn ev =
+  match (ev : Eval.t) with
+  | { u = Var "nil"; _ } -> Nil
+  | { u = Var n; _ } -> Number (Int.of_string n)
+  | { u = App ({ u = App ({ u = Var "cons"; _ }, x); _ }, y); _ } ->
+    Cons (of_eval_exn x, of_eval_exn y)
+  | _ ->
+    raise_s [%sexp "Encode.of_eval_exn expected list", (Eval.to_string_hum ev : string)]
+;;
