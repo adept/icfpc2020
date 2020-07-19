@@ -64,6 +64,18 @@ let is_int str =
   | _ -> false
 ;;
 
+let decode_list t =
+  let rec loop t =
+    match t.u with
+    | Var "nil" -> []
+    | _ ->
+      let h = car t in
+      let rest = loop (cdr t) in
+      h :: rest
+  in
+  loop t
+;;
+
 (* Decode multidraw vector: list of lists of coordinate pairs *)
 let decode_vector t : (int * int) list list =
   let decode_pair t =
@@ -74,23 +86,27 @@ let decode_vector t : (int * int) list list =
       , Big_int_Z.(int_of_big_int (big_int_of_string y)) )
     | x -> failwithf !"pair: %{sexp: u}" x ()
   in
-  let rec decode_list t =
-    match t.u with
-    | Var "nil" -> []
-    | _ ->
-      let pair = decode_pair (car t) in
-      let rest = decode_list (cdr t) in
-      pair :: rest
-  in
-  let rec loop t =
-    match t.u with
-    | Var "nil" -> []
-    | _ ->
-      let lst = decode_list (car t) in
-      let rest = loop (cdr t) in
-      lst :: rest
-  in
-  loop t
+  List.map (decode_list t) ~f:(fun l -> List.map (decode_list l) ~f:decode_pair)
+;;
+
+let id t = t
+
+let tuple2 fa fb t =
+  match decode_list t with
+  | [ a; b ] -> fa a, fb b
+  | x -> failwithf !"tuple2: %{sexp:t list}" x ()
+;;
+
+let tuple3 fa fb fc t =
+  match decode_list t with
+  | [ a; b; c ] -> fa a, fb b, fc c
+  | x -> failwithf !"tuple3: %{sexp:t list}" x ()
+;;
+
+let tuple4 fa fb fc fd t =
+  match decode_list t with
+  | [ a; b; c; d ] -> fa a, fb b, fc c, fd d
+  | x -> failwithf !"tuple4: %{sexp:t list}" x ()
 ;;
 
 let rec encode_list x =

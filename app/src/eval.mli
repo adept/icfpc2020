@@ -23,6 +23,11 @@ val car : t -> t
 val cdr : t -> t
 val decode_vector : t -> (int * int) list list
 val encode_list : int list -> t
+val decode_list : t -> t list
+val id : t -> t
+val tuple2 : (t -> 'a) -> (t -> 'b) -> t -> 'a * 'b
+val tuple3 : (t -> 'a) -> (t -> 'b) -> (t -> 'c) -> t -> 'a * 'b * 'c
+val tuple4 : (t -> 'a) -> (t -> 'b) -> (t -> 'c) -> (t -> 'd) -> t -> 'a * 'b * 'c * 'd
 
 (** Parsing *)
 

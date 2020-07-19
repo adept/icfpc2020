@@ -9,12 +9,13 @@ let run ~server_url:_ ~player_key ~api_key =
       let response = Http.send_api_exn ~api_key ~method_path:"aliens/send" create_msg in
       printf !"CREATE RESP: %{Encode#mach}\n" response;
       let response = Encode.to_eval response in
-      let status = Eval.(to_int_exn (car response)) in
+      let status, ((_, attack_key), (_, defend_key)) =
+        Eval.(tuple2 id (tuple2 (tuple2 id id) (tuple2 id id)) response)
+      in
+      let status = Eval.(to_int_exn status) in
       if not (Big_int.equal status Big_int.one)
       then failwithf !"CREATE failed %{Big_int}" status ()
       else (
-        let attack_key = Eval.(cdr response |> car |> car |> cdr |> car) in
-        let defend_key = Eval.(cdr response |> car |> cdr |> car |> cdr |> car) in
         printf !"ATTACK KEY: %{Eval#mach}\n" attack_key;
         printf !"DEFEND KEY: %{Eval#mach}\n" defend_key;
         player_key))
