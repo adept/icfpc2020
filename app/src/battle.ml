@@ -167,11 +167,11 @@ module Game_info = struct
     }
   [@@deriving fields]
 
-  let sexp_of_t { stage; x0; role; x2; x3; x4; tick; x1; our_ship; their_ship } =
+  let sexp_of_t { stage; max_ticks; role; x2; x3; x4; tick; x1; our_ship; their_ship } =
     [%sexp
       "Game_info"
       , { stage : Stage.t
-        ; x0 : Big_int.t
+        ; max_ticks : Big_int.t
         ; role : Role.t
         ; tick : Big_int.t
         ; x2 : string = Eval.to_string_mach x2
@@ -209,7 +209,17 @@ module Game_info = struct
         else Some info2, Some info1
       | _ -> failwith "more than two ships?!"
     in
-    { stage = Stage.of_eval stage; x0; role; x2; x3; x4; tick; x1; our_ship; their_ship }
+    { stage = Stage.of_eval stage
+    ; max_ticks
+    ; role
+    ; x2
+    ; x3
+    ; x4
+    ; tick
+    ; x1
+    ; our_ship
+    ; their_ship
+    }
   ;;
 end
 
