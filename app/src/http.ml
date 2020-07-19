@@ -46,10 +46,10 @@ let decode_response_ok_exn response =
 
 let proxy_url = "https://icfpc2020-api.testkontur.ru"
 
-let send_api_exn ~api_key ~method_path payload =
+let send_api_exn ?server_url ~api_key ~method_path payload =
   send_post_exn
     payload
-    ~server:proxy_url
+    ~server:(Option.value ~default:proxy_url server_url)
     ~uri:(sprintf "%s?apiKey=%s" method_path api_key)
   |> decode_response_ok_exn
 ;;
