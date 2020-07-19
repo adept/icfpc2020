@@ -38,16 +38,16 @@ let rec length { u; _ } =
   | App (t1, t2) -> 1 + length t1 + length t2
 ;;
 
-let car { u; _ } =
-  match u with
+let car t =
+  match t.u with
   | App ({ u = App ({ u = Var "cons"; _ }, h); _ }, _) -> h
-  | x -> failwithf !"Unexpected %{sexp: u} in car" x ()
+  | _ -> failwithf !"Unexpected %s in car" (to_string_hum t) ()
 ;;
 
-let cdr { u; _ } =
-  match u with
+let cdr t =
+  match t.u with
   | App ({ u = App ({ u = Var "cons"; _ }, _); _ }, t) -> t
-  | x -> failwithf !"Unexpected %{sexp: u} in cd" x ()
+  | _ -> failwithf !"Unexpected %s in cdr" (to_string_hum t) ()
 ;;
 
 let is_int str =

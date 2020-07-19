@@ -15,10 +15,10 @@ let%expect_test "parsing" =
     ap (ap "statelessdraw" "x0") "x1" |}];
   test "ap ap add ap ap add 2 3 ap ap add 4 5";
   [%expect {|
-    ap (ap "add" (ap (ap "add" 2) 3)) (ap (ap "add" 4) 5) |}];
+    ap (ap "add" (ap (ap "add" "2") "3")) (ap (ap "add" "4") "5") |}];
   test "ap ap ap c x y ap ap add 1 2";
   [%expect {|
-    ap (ap (ap "c" "x") "y") (ap (ap "add" 1) 2) |}]
+    ap (ap (ap "c" "x") "y") (ap (ap "add" "1") "2") |}]
 ;;
 
 let defs =
@@ -213,10 +213,10 @@ let%expect_test "base combinators" =
      This is strongly discouraged as backtraces are fragile.
      Please change this test to not include a backtrace. *)
 
-  (Failure "Int.of_string: \"x0\"")
-  Raised at file "stdlib.ml", line 29, characters 17-33
-  Called from file "app/src/eval.ml", line 132, characters 43-62
-  Called from file "app/src/eval.ml", line 98, characters 16-42
+  (Invalid_argument "Z.of_substring_base: invalid digit")
+  Raised by primitive operation at file "z.ml", line 106, characters 18-69
+  Called from file "app/src/eval.ml", line 174, characters 30-51
+  Called from file "app/src/eval.ml", line 136, characters 16-42
   Called from file "app/test/test_eval.ml", line 39, characters 6-87
   Called from file "app/test/test_eval.ml", line 92, characters 2-23
   Called from file "collector/expect_test_collector.ml", line 253, characters 12-19
@@ -237,8 +237,8 @@ let%expect_test "eval" =
     {|
     Defs:
     f2048 := ap "f" "f2048"
-    pwr2 := ap (ap "s" (ap (ap "c" (ap "eq" 0)) 1)) (ap (ap "b" (ap "mul" 2)) (ap (ap "b" "pwr2") (ap "add" -1)))
-    statelessdraw := ap (ap "c" (ap (ap "b" "b") (ap (ap "b" (ap "b" (ap "cons" 0))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))))) (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil") |}];
+    pwr2 := ap (ap "s" (ap (ap "c" (ap "eq" "0")) "1")) (ap (ap "b" (ap "mul" "2")) (ap (ap "b" "pwr2") (ap "add" "-1")))
+    statelessdraw := ap (ap "c" (ap (ap "b" "b") (ap (ap "b" (ap "b" (ap "cons" "0"))) (ap (ap "c" (ap (ap "b" "b") "cons")) (ap (ap "c" "cons") "nil"))))) (ap (ap "c" (ap (ap "b" "cons") (ap (ap "c" "cons") "nil"))) "nil") |}];
   let test str =
     let res =
       Eval.eval_custom ~verbose:false ~defs (Eval.parse_exn (String.split str ~on:' '))

@@ -3,13 +3,13 @@ open! Icfpc2020
 
 let%expect_test "encode numbers" =
   let open Encode in
-  print_endline (encode (Number 0));
+  print_endline (encode (Number Big_int.zero));
   [%expect {|010|}];
-  print_endline (encode (Number 1));
+  print_endline (encode (Number Big_int.one));
   [%expect {|01100001|}];
-  print_endline (encode (Number 16));
+  print_endline (encode (Number (Big_int.of_int 16)));
   [%expect {|0111000010000|}];
-  print_endline (encode (Number 256));
+  print_endline (encode (Number (Big_int.of_int 256)));
   [%expect {|011110000100000000|}]
 ;;
 
@@ -19,9 +19,9 @@ let%expect_test "encode lists" =
   [%expect {|00|}];
   print_endline (encode (Cons (Nil, Nil)));
   [%expect {|110000|}];
-  print_endline (encode (Cons (Number 0, Nil)));
+  print_endline (encode (Cons (Number Big_int.zero, Nil)));
   [%expect {|1101000|}];
-  print_endline (encode (Cons (Number 1, Number 2)));
+  print_endline (encode (Cons (Number Big_int.one, Number Big_int.two)));
   [%expect {|110110000101100010|}]
 ;;
 

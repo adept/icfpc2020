@@ -11,7 +11,10 @@ let run ~server_url ~player_key =
 let ping ~api_key =
   let open Encode in
   let response =
-    Http.send_api_exn ~api_key ~method_path:"aliens/send" (encode (Cons (Number 0, Nil)))
+    Http.send_api_exn
+      ~api_key
+      ~method_path:"aliens/send"
+      (encode (Cons (Number Big_int.zero, Nil)))
   in
   printf !"Server response: %{sexp: Encode.t}\n" response
 ;;

@@ -1,10 +1,10 @@
 open! Core
 
 type t =
-  | Number of int
+  | Number of Big_int.t
   | Cons of (t * t)
   | Nil
-[@@deriving sexp]
+[@@deriving sexp_of]
 
 val encode : t -> string
 val decode : string -> (t * string) Or_error.t

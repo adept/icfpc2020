@@ -38,28 +38,30 @@ With this encoding, the number zero only requires three bits (i.e. 010), but
    arbitrarily large numbers can also be represented. *)
 
 type t =
-  | Number of int
+  | Number of Big_int.t
   | Cons of (t * t)
   | Nil
-[@@deriving sexp]
+[@@deriving sexp_of]
 
 let encode_int n =
-  let pos_neg = if n >= 0 then "01" else "10" in
+  let open Big_int in
+  let pos_neg = if n >= zero then "01" else "10" in
   let rec bits x acc =
-    if x = 0
+    if x = zero
     then (
       let extra_zeros =
+        let open Int in
         let rem = List.length acc mod 4 in
-        if rem = 0 then 0 else 4 - rem
+        if rem = zero then zero else 4 - rem
       in
       String.make extra_zeros '0' ^ String.of_char_list acc)
     else (
-      let bit = if x mod 2 = 0 then '0' else '1' in
-      bits (x / 2) (bit :: acc))
+      let bit = if Big_int.mod_big_int x two = zero then '0' else '1' in
+      bits (x / of_int 2) (bit :: acc))
   in
   let bits = bits n [] in
-  let four_bit_blocks = String.length bits / 4 in
-  let len = if n = 0 then "0" else String.make four_bit_blocks '1' ^ "0" in
+  let four_bit_blocks = Int.( / ) (String.length bits) 4 in
+  let len = if n = zero then "0" else String.make four_bit_blocks '1' ^ "0" in
   pos_neg ^ len ^ bits
 ;;
 
@@ -76,7 +78,7 @@ let rec decode = function
     let%bind car, leftover = decode (String.slice str 2 0) in
     let%bind cdr, leftover = decode leftover in
     Ok (Cons (car, cdr), leftover)
-  | "010" -> Ok (Number 0, "")
+  | "010" -> Ok (Number Big_int.zero, "")
   | str ->
     let open Or_error.Let_syntax in
     let%bind () =
@@ -106,26 +108,35 @@ let rec decode = function
     in
     let value_str = String.slice str 0 (quads * 4) in
     let leftover = String.slice str (quads * 4) 0 in
-    Or_error.try_with (fun () ->
-        Number (sign * int_of_string ("0b" ^ value_str)), leftover)
+    let value =
+      let open Big_int in
+      let acc = ref Big_int.zero in
+      let pow = ref Big_int.one in
+      for i = Int.( - ) (String.length value_str) 1 downto 0 do
+        if Char.equal value_str.[i] '1' then acc := !acc + !pow;
+        pow := !pow * two
+      done;
+      !acc
+    in
+    Or_error.try_with (fun () -> Number (Big_int.mult_int_big_int sign value), leftover)
 ;;
 
 let rec to_string_mach = function
-  | Number int -> Int.to_string int
+  | Number n -> Big_int.to_string n
   | Nil -> "nil"
   | Cons (x, y) -> "ap ap cons " ^ to_string_mach x ^ " " ^ to_string_mach y
 ;;
 
 let rec to_eval = function
   | Nil -> Eval.var "nil"
-  | Number n -> Eval.var (Int.to_string n)
+  | Number n -> Eval.var (Big_int.to_string n)
   | Cons (x, y) -> Eval.app (Eval.app (Eval.var "cons") (to_eval x)) (to_eval y)
 ;;
 
 let rec of_eval_exn ev =
   match (ev : Eval.t) with
   | { u = Var "nil"; _ } -> Nil
-  | { u = Var n; _ } -> Number (Int.of_string n)
+  | { u = Var n; _ } -> Number (Big_int.of_string n)
   | { u = App ({ u = App ({ u = Var "cons"; _ }, x); _ }, y); _ } ->
     Cons (of_eval_exn x, of_eval_exn y)
   | _ ->
