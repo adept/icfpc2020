@@ -5,21 +5,12 @@ module Big_int : sig
 
   type t = Z.t [@@deriving sexp_of]
 
+  val big_int_of_string : string -> t
   val zero : t
   val is_zero : t -> bool
 end
 
 type t =
-<<<<<<< HEAD
-  | Nil
-  | True
-  | False
-  | Var of string
-  | Num of Big_int.t
-  | App of t * t
-[@@deriving equal, sexp]
-
-=======
   { mutable evaluated : t option
   ; u : u
   }
@@ -31,9 +22,6 @@ and u =
 
 val app : t -> t -> t
 val var : string -> t
-val car : t -> t
-val cdr : t -> t
->>>>>>> a705148... Implement their evaluator; the tests don't pass because they don't have lots of special cases
 val to_string_hum : t -> string
 val load_defs_exn : filename:string -> t String.Map.t
 

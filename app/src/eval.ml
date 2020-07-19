@@ -6,13 +6,11 @@ module Big_int = struct
   type t = big_int
 
   let zero = zero_big_int
-  let one = big_int_of_int 1
-  let minus_one = big_int_of_int (-1)
+
+  (* let one = big_int_of_int 1 *)
+  (* let minus_one = big_int_of_int (-1) *)
   let is_zero t = eq_big_int zero t
-  let is_one t = eq_big_int one t
-  let is_minus_one t = eq_big_int minus_one t
   let sexp_of_t t = Sexp.of_string (string_of_big_int t)
-  let t_of_sexp s = big_int_of_string (Sexp.to_string s)
 end
 
 type t =
@@ -24,6 +22,18 @@ and u =
   | Var of string
   | App of t * t
 [@@deriving sexp_of]
+
+let rec to_string_hum t =
+  match t.u with
+  | Var name -> sprintf {|"%s"|} name
+  | App (x, y) ->
+    let str_of_arg arg =
+      match arg.u with
+      | Var name -> sprintf {|"%s"|} name
+      | _ -> sprintf "(%s)" (to_string_hum arg)
+    in
+    sprintf "ap %s %s" (str_of_arg x) (str_of_arg y)
+;;
 
 let var str = { u = Var str; evaluated = None }
 let app x y = { u = App (x, y); evaluated = None }
@@ -53,40 +63,41 @@ let cdr { u; _ } =
   | x -> failwithf !"Unexpected %{sexp: u} in cd" x ()
 ;;
 
-(* Decode multidraw vector: list of lists of coordinate pairs *)
-let decode_vector t : (int * int) list list =
-  let decode_pair t =
-    match t with
-    | App (App (Var "cons", Num x), Num y) ->
-      Big_int_Z.int_of_big_int x, Big_int_Z.int_of_big_int y
-    | x -> failwithf !"pair: %{sexp:t}" x ()
-  in
-  let _ = decode_pair in
-  let rec decode_list t =
-    match t with
-    | Nil -> []
-    | x ->
-      let pair = decode_pair (car x) in
-      let rest = decode_list (cdr x) in
-      pair :: rest
-  in
-  let rec loop t =
-    match t with
-    | Nil -> []
-    | x ->
-      let lst = decode_list (car x) in
-      let rest = loop (cdr x) in
-      lst :: rest
-  in
-  loop t
-;;
-
 let is_int str =
   try
     let (_ : Big_int.t) = Big_int.big_int_of_string str in
     true
   with
   | _ -> false
+;;
+
+(* Decode multidraw vector: list of lists of coordinate pairs *)
+let decode_vector t : (int * int) list list =
+  let decode_pair t =
+    match t.u with
+    | App ({ u = App ({ u = Var "cons"; _ }, { u = Var x; _ }); _ }, { u = Var y; _ })
+      when is_int x && is_int y ->
+      ( Big_int_Z.(int_of_big_int (big_int_of_string x))
+      , Big_int_Z.(int_of_big_int (big_int_of_string y)) )
+    | x -> failwithf !"pair: %{sexp: u}" x ()
+  in
+  let rec decode_list t =
+    match t.u with
+    | Var "nil" -> []
+    | _ ->
+      let pair = decode_pair (car t) in
+      let rest = decode_list (cdr t) in
+      pair :: rest
+  in
+  let rec loop t =
+    match t.u with
+    | Var "nil" -> []
+    | _ ->
+      let lst = decode_list (car t) in
+      let rest = loop (cdr t) in
+      lst :: rest
+  in
+  loop t
 ;;
 
 let parse ws =

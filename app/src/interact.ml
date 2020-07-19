@@ -54,33 +54,32 @@ let rec interact ~protocol ~state ~vector ~eval =
     state
     vector;
   let res = eval Eval.(app (app protocol state) vector) in
-  printf !"res = %{sexp:Eval.t}\n%!" res;
   let flag = Eval.car res in
   let newState = Eval.car (Eval.cdr res) in
   let vector = Eval.car (Eval.cdr (Eval.cdr res)) in
-  printf !"res = %{sexp: Eval.t}\n%!" res;
+  printf !"res = %{Eval#hum}\n%!" res;
   printf !"flag = %{Eval#hum}\n%!" flag;
-  match flag with
-  | Num d when Eval.Big_int.is_zero d ->
-    printf !"newState = %{Eval#hum}\n%!" newState;
-    let pictures = Eval.decode_vector vector in
-    printf !"pictures = %{sexp:(int*int) list list}\n%!" pictures;
-    G.clear_graph ();
-    draw_pictures pictures;
-    let x, y = get_click () in
-    let clicked =
-      Eval.(
-        App
-          ( App (Var "cons", Num (Big_int_Z.big_int_of_int x))
-          , Num (Big_int_Z.big_int_of_int y) ))
-    in
-    interact ~protocol ~state:newState ~vector:clicked ~eval
-  | _ ->
-    printf "\nPOSTing... Continue? (Ctrl-C to quit)\n%!";
-    let (_ : string) = In_channel.input_line_exn In_channel.stdin in
-    (* (\* TODO : send *\)
-     * interact ~protocol ~state ~vector ~eval *)
-    failwith "flag = 1 not implemented"
+  match flag.u with
+  | App _ -> raise_s [%sexp "Unexpected flag value"]
+  | Var x ->
+    (match Eval.Big_int.is_zero (Eval.Big_int.big_int_of_string x) with
+    | true ->
+      printf !"newState = %{Eval#hum}\n%!" newState;
+      let pictures = Eval.decode_vector vector in
+      printf !"pictures = %{sexp:(int*int) list list}\n%!" pictures;
+      G.clear_graph ();
+      draw_pictures pictures;
+      let x, y = get_click () in
+      let clicked =
+        Eval.(app (app (var "cons") (var (Int.to_string x))) (var (Int.to_string y)))
+      in
+      interact ~protocol ~state:newState ~vector:clicked ~eval
+    | false | (exception _) ->
+      printf "\nPOSTing... Continue? (Ctrl-C to quit)\n%!";
+      let (_ : string) = In_channel.input_line_exn In_channel.stdin in
+      (* (\* TODO : send *\)
+       * interact ~protocol ~state ~vector ~eval *)
+      failwith "flag = 1 not implemented")
 ;;
 
 let run ~filename ~protocol ~state ~vector =
