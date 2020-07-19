@@ -70,6 +70,8 @@ module Vec2 = struct
     let open Big_int in
     neg x, neg y
   ;;
+
+  let add (x1, y1) (x2, y2) = Big_int_Z.add_big_int x1 x2, Big_int_Z.add_big_int y1 y2
 end
 
 module Ship_stats = struct
@@ -253,19 +255,19 @@ let shoot_cmd ~ship_id ~target ~x3 =
     ]
 ;;
 
-(** Returns a unit vector pointing to the planet from [pos]. *)
-let planet_vec (x, y) =
+(** Returns a unit vector pointing to the planet from [pos]. Broken? *)
+let _planet_vec (x, y) =
   let open Big_int in
   if y < zero && abs y >= abs x
   then (
     (* Top quadrant *)
     printf "QUADRANT: TOP\n%!";
-    zero, one)
+    zero, minus_one)
   else if y > zero && abs y >= abs x
   then (
     (* Bottom quadrant *)
     printf "QUADRANT: BOTTOM\n%!";
-    zero, minus_one)
+    zero, one)
   else if x < zero && abs x >= abs y
   then (
     (* Left quadrant *)
@@ -275,6 +277,15 @@ let planet_vec (x, y) =
     (* Right quadrant *)
     printf "QUADRANT: RIGHT\n%!";
     minus_one, zero)
+;;
+
+(* Accel away from the planet *)
+let away_from (x, y) =
+  Big_int.of_int (-Big_int_Z.sign_big_int x), Big_int.of_int (-Big_int_Z.sign_big_int y)
+;;
+
+let towards (x, y) =
+  Big_int.of_int (Big_int_Z.sign_big_int x), Big_int.of_int (Big_int_Z.sign_big_int y)
 ;;
 
 let join ~server_url ~api_key player_key =
@@ -347,8 +358,15 @@ let run ~server_url ~player_key ~api_key =
           | None ->
             (* No ship :,() *)
             []
-          | Some ({ id; pos; _ }, _) ->
-            [ accelerate_cmd ~ship_id:id ~vector:(planet_vec pos) ]
+          | Some ({ id; velocity; _ }, _) ->
+            List.filter_opt
+              [ Some (accelerate_cmd ~ship_id:id ~vector:(towards velocity))
+              ; Option.map info.their_ship ~f:(fun (ship, _) ->
+                    shoot_cmd
+                      ~ship_id:id
+                      ~target:(Vec2.add ship.pos ship.velocity)
+                      ~x3:Big_int.one)
+              ]
         in
         let info = commands ~server_url ~api_key player_key cmds in
         match Game_info.stage info with
