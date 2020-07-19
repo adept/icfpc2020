@@ -6,6 +6,7 @@ module Big_int = struct
   type t = big_int
 
   let zero = zero_big_int
+  let to_string = string_of_big_int
 
   (* let one = big_int_of_int 1 *)
   (* let minus_one = big_int_of_int (-1) *)
@@ -135,7 +136,7 @@ let base_defs = String.Map.empty
 
 let to_int_exn t =
   match t.u with
-  | Var str -> Int.of_string str
+  | Var str -> Big_int.big_int_of_string str
   | _ -> raise_s [%sexp "Not a number", (t : t)]
 ;;
 
@@ -169,7 +170,8 @@ and eval_once t ~verbose ~defs =
     | App (f, x) ->
       let f = eval f in
       (match f.u with
-      | Var "neg" -> var (Int.to_string (~-1 * to_int_exn (eval x)))
+      | Var "neg" ->
+        var (Big_int.to_string (Big_int.mult_int_big_int ~-1 (to_int_exn (eval x))))
       | Var "i" -> x
       | Var "nil" -> var "t"
       | Var "isnil" -> app x (app (var "t") (app (var "t") (var "f")))
@@ -180,11 +182,28 @@ and eval_once t ~verbose ~defs =
         (match f2.u with
         | Var "t" -> y
         | Var "f" -> x
-        | Var "add" -> var (Int.to_string (to_int_exn (eval x) + to_int_exn (eval y)))
-        | Var "mul" -> var (Int.to_string (to_int_exn (eval x) * to_int_exn (eval y)))
-        | Var "div" -> var (Int.to_string (to_int_exn (eval y) / to_int_exn (eval x)))
-        | Var "lt" -> var (if to_int_exn (eval y) < to_int_exn (eval x) then "t" else "f")
-        | Var "eq" -> var (if to_int_exn (eval x) = to_int_exn (eval y) then "t" else "f")
+        | Var "add" ->
+          var
+            (Big_int.to_string
+               (Big_int.add_big_int (to_int_exn (eval x)) (to_int_exn (eval y))))
+        | Var "mul" ->
+          var
+            (Big_int.to_string
+               (Big_int.mult_big_int (to_int_exn (eval x)) (to_int_exn (eval y))))
+        | Var "div" ->
+          var
+            (Big_int.to_string
+               (Big_int.div_big_int (to_int_exn (eval y)) (to_int_exn (eval x))))
+        | Var "lt" ->
+          var
+            (if Big_int.lt_big_int (to_int_exn (eval y)) (to_int_exn (eval x))
+            then "t"
+            else "f")
+        | Var "eq" ->
+          var
+            (if Big_int.eq_big_int (to_int_exn (eval x)) (to_int_exn (eval y))
+            then "t"
+            else "f")
         | Var "cons" -> eval_cons y x ~verbose ~defs
         | App (f3, z) ->
           let f3 = eval f3 in

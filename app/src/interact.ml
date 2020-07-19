@@ -15,7 +15,7 @@ let draw_picture pixel_shift pic = List.iter ~f:(put_pixel pixel_shift) pic
 
 (* i-th gray *)
 let color colors i =
-  let step = 250 / (colors / 3) in
+  let step = 250 / Int.max 1 (colors / 3) in
   let third = colors / 3 in
   let attenuate = 50 in
   let r, g, b =
