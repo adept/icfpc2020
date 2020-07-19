@@ -1,12 +1,12 @@
 open! Core
 module G = Graphics
 
-let pixel_size = 10
+let pixel_size = 4
 
-let put_pixel pixel_shift (x, y) =
+let put_pixel (shift_x, shift_y) (x, y) =
   G.fill_rect
-    ((pixel_shift + x) * pixel_size)
-    ((pixel_shift - y) * pixel_size)
+    ((shift_x + x) * pixel_size)
+    ((shift_y - y) * pixel_size)
     pixel_size
     pixel_size
 ;;
@@ -16,9 +16,12 @@ let draw_picture pixel_shift pic = List.iter ~f:(put_pixel pixel_shift) pic
 (* i-th gray *)
 let color color_step i = G.rgb (i * color_step) (i * color_step) (i * color_step)
 
-let min_neg_coord pics =
-  List.fold ~init:0 pics ~f:(fun acc pic ->
-      List.fold ~init:acc pic ~f:(fun acc (x, y) -> min (min acc x) y))
+let compute_pixel_shift pics =
+  let min_x, min_y =
+    List.fold ~init:(0, 0) pics ~f:(fun acc pic ->
+        List.fold ~init:acc pic ~f:(fun (min_x, min_y) (x, y) -> min x min_x, min y min_y))
+  in
+  -min_x + 5, -min_y + 5
 ;;
 
 let draw_pictures pixel_shift pics =
@@ -28,14 +31,14 @@ let draw_pictures pixel_shift pics =
       draw_picture pixel_shift pic)
 ;;
 
-let get_click pixel_shift () =
+let get_click (shift_x, shift_y) () =
   G.moveto 10 10;
   G.set_color G.black;
   G.draw_string "Click on pixel";
   printf "waiting for click\n%!";
   let status = G.wait_next_event [ G.Button_down ] in
-  let x = (status.G.mouse_x / pixel_size) - pixel_shift in
-  let y = -((status.G.mouse_y / pixel_size) - pixel_shift) in
+  let x = (status.G.mouse_x / pixel_size) - shift_x in
+  let y = -((status.G.mouse_y / pixel_size) - shift_y) in
   printf "clicked: (%d,%d) => (%d,%d)\n%!" status.G.mouse_x status.G.mouse_y x y;
   G.moveto 10 10;
   G.set_color G.white;
@@ -72,7 +75,7 @@ let rec interact ~protocol ~state ~vector ~eval =
       let pictures = Eval.decode_vector vector in
       printf !"pictures = %{sexp:(int*int) list list}\n%!" pictures;
       G.clear_graph ();
-      let pixel_shift = -min_neg_coord pictures + 10 in
+      let pixel_shift = compute_pixel_shift pictures in
       draw_pictures pixel_shift pictures;
       let x, y = get_click pixel_shift () in
       let clicked =
