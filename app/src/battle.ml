@@ -1,5 +1,7 @@
 open Core
 
+let version = "0.99 DIR-FLIP-FIX"
+
 let maybe_create ~server_url ~api_key player_key =
   if String.equal player_key "ATTACK" || String.equal player_key "DEFEND"
   then (
@@ -114,7 +116,21 @@ module Ship = struct
     ; x6 : Big_int.t
     ; x7 : Big_int.t
     }
-  [@@deriving sexp_of, fields]
+  [@@deriving fields]
+
+  let sexp_of_t { role; id; pos; velocity; stats; x5; x6; x7 } =
+    [%sexp
+      "Ship"
+      , { role : Role.t
+        ; id : Big_int.t
+        ; pos : Vec2.t
+        ; velocity : Vec2.t
+        ; stats : Ship_stats.t
+        ; x5 : Big_int.t
+        ; x6 : Big_int.t
+        ; x7 : Big_int.t
+        }]
+  ;;
 
   let of_eval t =
     printf !"SHIP: %{Eval#hum}\n" t;
@@ -149,7 +165,27 @@ module Game_info = struct
     ; our_ship : (Ship.t * Eval.t list) option (* ship, commands *)
     ; their_ship : (Ship.t * Eval.t list) option (* ship, commands *)
     }
-  [@@deriving fields, sexp_of]
+  [@@deriving fields]
+
+  let sexp_of_t { stage; x0; role; x2; x3; x4; tick; x1; our_ship; their_ship } =
+    [%sexp
+      "Game_info"
+      , { stage : Stage.t
+        ; x0 : Big_int.t
+        ; role : Role.t
+        ; tick : Big_int.t
+        ; x2 : string = Eval.to_string_mach x2
+        ; x3 : string = Eval.to_string_mach x3
+        ; x4 : string = Eval.to_string_mach x4
+        ; x1 : string = Eval.to_string_mach x1
+        ; our_ship : (Ship.t * string list) option =
+            Option.map our_ship ~f:(fun (ship, commands) ->
+                ship, List.map commands ~f:Eval.to_string_mach)
+        ; their_ship : (Ship.t * string list) option =
+            Option.map their_ship ~f:(fun (ship, commands) ->
+                ship, List.map commands ~f:Eval.to_string_mach)
+        }]
+  ;;
 
   let of_eval stage info state =
     printf !"INFO: %{Eval#hum}\n%!" info;
@@ -271,6 +307,7 @@ let commands ~server_url ~api_key player_key cmds =
 ;;
 
 let run ~server_url ~player_key ~api_key =
+  printf "VERSION: %s\n\n" version;
   let player_key = maybe_create ~server_url ~api_key player_key in
   let info = join ~server_url ~api_key player_key in
   match Game_info.stage info with
@@ -281,13 +318,19 @@ let run ~server_url ~player_key ~api_key =
     | Finished -> ()
     | _ ->
       let rec loop (info : Game_info.t) =
+        printf
+          "\n\n\
+           ********************************************************************************\n";
+        printf !"                         TICK %{Big_int}\n" info.tick;
+        printf
+          "********************************************************************************\n\n";
         let cmds =
           match info.our_ship with
           | None ->
             (* No ship :,() *)
             []
           | Some ({ id; pos; _ }, _) ->
-            [ accelerate_cmd ~ship_id:id ~vector:(Vec2.neg (planet_vec pos)) ]
+            [ accelerate_cmd ~ship_id:id ~vector:(planet_vec pos) ]
         in
         let info = commands ~server_url ~api_key player_key cmds in
         match Game_info.stage info with
