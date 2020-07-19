@@ -13,6 +13,7 @@ and u =
 val app : t -> t -> t
 val var : string -> t
 val to_string_hum : t -> string
+val to_string_mach : t -> string
 val load_defs_exn : filename:string -> t String.Map.t
 
 (** List-like access *)
