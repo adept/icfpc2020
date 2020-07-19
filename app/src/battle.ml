@@ -1,6 +1,6 @@
 open Core
 
-let version = "0.100 HACKY ORBITS"
+let version = "0.100 HACKY ORBITS 2"
 
 let maybe_create ~server_url ~api_key player_key =
   if String.equal player_key "ATTACK" || String.equal player_key "DEFEND"
@@ -412,11 +412,7 @@ let maybe_movement_command ~id ~pos ~velocity =
     in
     let sideways_vector =
       if sideways_velocity = 0
-      then
-        mk_sideways_vector
-          (match sideways_dir with
-          | `X -> ~-1 * sign (fst pos)
-          | `Y -> ~-1 * sign (snd pos))
+      then mk_sideways_vector 1
       else mk_sideways_vector (~-1 * sign sideways_velocity)
     in
     let vector =
