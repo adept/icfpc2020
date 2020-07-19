@@ -63,6 +63,11 @@ module Vec2 = struct
   let to_eval (x, y) =
     Eval.cons (Eval.var (Big_int.to_string x)) (Eval.var (Big_int.to_string y))
   ;;
+
+  let flip (x, y) =
+    let open Big_int in
+    neg x, neg y
+  ;;
 end
 
 module Ship = struct
@@ -151,6 +156,22 @@ let shoot_cmd ~ship_id ~target ~x3 =
     Eval.(
       encode_list
         [ var "2"; var ship_id; Vec2.to_eval target; var (Big_int.to_string x3) ])
+;;
+
+(** Returns a unit vector pointing to the planet from [pos]. *)
+let planet_vec (x, y) =
+  let open Big_int in
+  if y < zero && abs y >= abs x
+  then (* Top quadrant *)
+    zero, one
+  else if y > zero && abs y >= abs x
+  then (* Bottom quadrant *)
+    zero, minus_one
+  else if x < zero && abs x >= abs y
+  then (* Left quadrant *)
+    minus_one, zero
+  else (* Right quadrant *)
+    one, zero
 ;;
 
 let join ~server_url ~api_key player_key =

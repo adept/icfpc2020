@@ -3,12 +3,15 @@ include Big_int_Z
 
 type t = big_int
 
+let minus_one = big_int_of_int ~-1
 let zero = zero_big_int
 let one = big_int_of_int 1
 let two = big_int_of_int 2
 let to_string = string_of_big_int
 let of_string = big_int_of_string
 let of_int = big_int_of_int
+let neg = mult_int_big_int ~-1
+let abs = abs_big_int
 let ( + ) = add_big_int
 let ( - ) = sub_big_int
 let ( * ) = mult_big_int
@@ -23,7 +26,9 @@ let ( / ) a b =
 ;;
 
 let ( < ) = lt_big_int
+let ( <= ) = le_big_int
 let ( = ) = eq_big_int
+let ( > ) = gt_big_int
 let ( >= ) = ge_big_int
 let equal = eq_big_int
 let is_zero t = eq_big_int zero t
