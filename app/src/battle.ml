@@ -248,7 +248,7 @@ let run ~server_url ~player_key ~api_key =
     (match Game_info.stage info with
     | Finished -> ()
     | _ ->
-      let rec loop () =
+      let rec loop (info : Game_info.t) =
         let cmds =
           match info.our_ship with
           | None ->
@@ -260,7 +260,7 @@ let run ~server_url ~player_key ~api_key =
         let info = commands ~server_url ~api_key player_key cmds in
         match Game_info.stage info with
         | Finished -> ()
-        | _ -> loop ()
+        | _ -> loop info
       in
-      loop ())
+      loop info)
 ;;
