@@ -138,9 +138,9 @@ let%expect_test "base combinators" =
     Starting evaluation: ap ap div 5 -3
     Result: "-1"
     Starting evaluation: ap ap div -5 3
-    Result: "-2"
+    Result: "-1"
     Starting evaluation: ap ap div -5 -3
-    Result: "2" |}];
+    Result: "1" |}];
   (* #11 *)
   (* test "ap ap eq x0 x0"; *)
   test "ap ap eq 0 -2";

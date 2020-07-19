@@ -12,7 +12,16 @@ let of_int = big_int_of_int
 let ( + ) = add_big_int
 let ( - ) = sub_big_int
 let ( * ) = mult_big_int
-let ( / ) = div_big_int
+
+let ( / ) a b =
+  (* Round towards zero *)
+  let res = div_big_int a b in
+  let multiply_up = mult_big_int res b in
+  if gt_big_int (abs_big_int multiply_up) (abs_big_int a)
+  then if gt_big_int res zero then sub_big_int res one else add_big_int res one
+  else res
+;;
+
 let ( < ) = lt_big_int
 let ( = ) = eq_big_int
 let ( >= ) = ge_big_int
