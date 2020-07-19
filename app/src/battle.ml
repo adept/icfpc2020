@@ -45,7 +45,7 @@ module Role = struct
   type t =
     | Attacker
     | Defender
-  [@@deriving sexp_of]
+  [@@deriving sexp_of, compare, equal]
 
   let of_eval t =
     match t.Eval.u with
@@ -98,13 +98,14 @@ module Game_info = struct
     ; x4 : Eval.t
     ; tick : Big_int.t
     ; x1 : Eval.t
-    ; ships : (Ship.t * Eval.t list) list (* ship, commands *)
+    ; our_ship : (Ship.t * Eval.t list) option (* ship, commands *)
+    ; their_ship : (Ship.t * Eval.t list) option (* ship, commands *)
     }
   [@@deriving fields, sexp_of]
 
   let of_eval stage info state =
     printf !"INFO: %{Eval#hum}\n%!" info;
-    let x0, role, x2, x3, x4 = Eval.(tuple5 id id id id id info) in
+    let x0, role, x2, x3, x4 = Eval.(tuple5 id Role.of_eval id id id info) in
     printf !"STATE: %{Eval#hum}\n%!" state;
     let tick, x1, ships =
       match Eval.decode_list state with
@@ -112,16 +113,17 @@ module Game_info = struct
       | _ -> Eval.(tuple3 to_int_exn id decode_list state)
     in
     let ships = List.map ~f:Eval.(tuple2 Ship.of_eval decode_list) ships in
-    { stage = Stage.of_eval stage
-    ; x0
-    ; role = Role.of_eval role
-    ; x2
-    ; x3
-    ; x4
-    ; tick
-    ; x1
-    ; ships
-    }
+    let our_ship, their_ship =
+      match ships with
+      | [] -> None, None
+      | [ _ ] -> failwith "one ship?!"
+      | [ ((ship1, _) as info1); info2 ] ->
+        if Role.equal (Ship.role ship1) role
+        then Some info1, Some info2
+        else Some info2, Some info1
+      | _ -> failwith "more than two ships?!"
+    in
+    { stage = Stage.of_eval stage; x0; role; x2; x3; x4; tick; x1; our_ship; their_ship }
   ;;
 end
 
