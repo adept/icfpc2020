@@ -110,7 +110,7 @@ let rec interact ~protocol ~state ~vector ~eval ~api_key =
         Http.send_api_exn ~api_key ~method_path:"aliens/send" (Encode.encode data)
         |> Encode.to_eval
       in
-      printf "Received: %s\n%!" (Eval.to_string_hum vector);
+      printf "Decoded: %s\n%!" (Eval.to_string_hum vector);
       Unix.sleep 1;
       interact ~protocol ~state:newState ~vector ~eval ~api_key)
 ;;

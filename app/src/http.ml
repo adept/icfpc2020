@@ -31,6 +31,7 @@ let send_post_exn str ~server_url =
 ;;
 
 let decode_response_ok_exn response =
+  printf "Received: %s\n%!" response;
   match Encode.decode response with
   | Ok (res, _leftover) -> res
   | Error err -> failwithf !"Error decoding %s: %{Error#hum}" response err ()
