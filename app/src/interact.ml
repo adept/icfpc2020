@@ -102,14 +102,13 @@ let rec interact ~protocol ~state ~vector ~eval ~api_key =
       interact ~protocol ~state:newState ~vector:clicked ~eval ~api_key
     | false ->
       let data = Encode.of_eval_exn vector in
-      printf !"Would like to send: %{sexp: Encode.t}\n%!" data;
-      printf "\nPOSTing... Continue? (Ctrl-C to quit)\n%!";
-      let (_ : string) = In_channel.input_line_exn In_channel.stdin in
+      printf !"POSTing: %{sexp: Encode.t}\n%!" data;
       let vector =
         Http.send_api_exn ~api_key ~method_path:"aliens/send" (Encode.encode data)
         |> Encode.to_eval
       in
       printf "Received: %s\n%!" (Eval.to_string_hum vector);
+      Unix.sleep 1;
       interact ~protocol ~state:newState ~vector ~eval ~api_key)
 ;;
 
