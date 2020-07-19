@@ -313,6 +313,12 @@ let run ~server_url ~player_key ~api_key =
     | Finished -> ()
     | _ ->
       let rec loop (info : Game_info.t) =
+        printf
+          "\n\n\
+           ********************************************************************************\n";
+        printf !"                         TICK %{Big_int}\n" info.tick;
+        printf
+          "********************************************************************************\n\n";
         let cmds =
           match info.our_ship with
           | None ->
