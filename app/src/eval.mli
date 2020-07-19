@@ -21,6 +21,7 @@ val car : t -> t
 
 val cdr : t -> t
 val decode_vector : t -> (int * int) list list
+val encode_list : int list -> t
 
 (** Parsing *)
 

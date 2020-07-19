@@ -1,12 +1,6 @@
 open Core
 
-let create_msg =
-  Encode.(
-    encode
-      (of_eval_exn
-         Eval.(
-           app (app (var "cons") (var "1")) (app (app (var "cons") (var "0")) (var "nil")))))
-;;
+let create_msg = Encode.(encode (of_eval_exn (Eval.encode_list [ 1; 0 ])))
 
 let run ~server_url:_ ~player_key ~api_key =
   let player_key =

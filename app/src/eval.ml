@@ -93,6 +93,12 @@ let decode_vector t : (int * int) list list =
   loop t
 ;;
 
+let rec encode_list x =
+  match x with
+  | [] -> var "nil"
+  | h :: t -> app (app (var "cons") (var (Int.to_string h))) (encode_list t)
+;;
+
 let parse ws =
   let rec loop = function
     | "ap" :: rest ->
