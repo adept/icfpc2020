@@ -44,6 +44,8 @@ let rec length { u; _ } =
   | App (t1, t2) -> 1 + length t1 + length t2
 ;;
 
+let cons a b = app (app (var "cons") a) b
+
 let car t =
   match t.u with
   | App ({ u = App ({ u = Var "cons"; _ }, h); _ }, _) -> h

@@ -59,6 +59,10 @@ module Vec2 = struct
   type t = Big_int.t * Big_int.t [@@deriving sexp_of]
 
   let of_eval t = Eval.(tuple2 to_int_exn to_int_exn t)
+
+  let to_eval (x, y) =
+    Eval.cons (Eval.var (Big_int.to_string x)) (Eval.var (Big_int.to_string y))
+  ;;
 end
 
 module Ship = struct
@@ -129,6 +133,24 @@ let game_response response =
     then failwithf !"Game Reponse: success status is not one?! %{Eval#mach}" success ()
     else Game_info.of_eval stage info state
   | _ -> failwithf !"Game Response: CANT PARSE %{Eval#mach}" response ()
+;;
+
+let accelerate_cmd ~ship_id ~vector =
+  let open Encode in
+  of_eval_exn Eval.(encode_list [ var "0"; var ship_id; Vec2.to_eval vector ])
+;;
+
+let detonate_cmd ~ship_id =
+  let open Encode in
+  of_eval_exn Eval.(encode_list [ var "1"; var ship_id ])
+;;
+
+let shoot_cmd ~ship_id ~target ~x3 =
+  let open Encode in
+  of_eval_exn
+    Eval.(
+      encode_list
+        [ var "2"; var ship_id; Vec2.to_eval target; var (Big_int.to_string x3) ])
 ;;
 
 let join ~server_url ~api_key player_key =
