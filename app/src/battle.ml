@@ -377,7 +377,7 @@ module Simulator = struct
         None
       else (
         let velocity = Vec2.add velocity pos in
-        let pos = Vec2.add velocity (quadrants pos) in
+        let pos = Vec2.add velocity (gravity pos) in
         let ticks = ticks - 1 in
         if in_planet pos then Some (max_ticks - ticks) else loop ~pos ~velocity ~ticks)
     in
