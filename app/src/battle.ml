@@ -83,9 +83,13 @@ module Ship_stats = struct
   [@@deriving sexp_of, fields]
 
   let sample =
-    { fuel = Big_int_Z.big_int_of_int 255
-    ; b = Big_int_Z.big_int_of_int 1
-    ; c = Big_int_Z.big_int_of_int 1
+    (* We previously tried:
+
+       - (255, 1, 1, 1) but we start to use lots of fuel after a few turns.
+    *)
+    { fuel = Big_int_Z.big_int_of_int 254
+    ; b = Big_int_Z.big_int_of_int 0
+    ; c = Big_int_Z.big_int_of_int 16
     ; d = Big_int_Z.big_int_of_int 1
     }
   ;;
@@ -358,7 +362,7 @@ let run ~server_url ~player_key ~api_key =
           | None ->
             (* No ship :,() *)
             []
-          | Some ({ id; pos; _ }, _) ->
+          | Some ({ id; pos; role; _ }, _) ->
             List.filter_opt
               [ Some (accelerate_cmd ~ship_id:id ~vector:(quadrants pos))
               ; Option.map info.their_ship ~f:(fun (ship, _) ->
