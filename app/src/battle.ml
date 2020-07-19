@@ -366,6 +366,25 @@ let commands ~server_url ~api_key player_key cmds =
   game_info
 ;;
 
+module Simulator = struct
+  let in_planet (x, y) = -16 <= x && x <= 16 && -16 <= y && y <= 16
+
+  (* How many ticks until we crash into the planet?  May return None. *)
+  let planet_crash_eta ~pos ~velocity ~max_ticks =
+    let rec loop ~pos ~velocity ~ticks =
+      if ticks = 0
+      then (* We did not crash. *)
+        None
+      else (
+        let velocity = Vec2.add velocity pos in
+        let pos = Vec2.add velocity (quadrants pos) in
+        let ticks = ticks - 1 in
+        if in_planet pos then Some (max_ticks - ticks) else loop ~pos ~velocity ~ticks)
+    in
+    loop ~pos ~velocity ~ticks:max_ticks
+  ;;
+end
+
 let run ~server_url ~player_key ~api_key =
   printf "VERSION: %s\n\n" version;
   let player_key = maybe_create ~server_url ~api_key player_key in
