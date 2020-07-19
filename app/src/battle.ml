@@ -191,6 +191,47 @@ module Ship = struct
   ;;
 end
 
+module Ship_command = struct
+  type t =
+    | Accelerate of { vector : Vec2.t }
+    | Detonate of
+        { d0 : Big_int.t
+        ; d1 : Big_int.t
+        }
+    | Shoot of
+        { target : Vec2.t
+        ; s0 : Big_int.t
+        ; s1 : Big_int.t
+        ; s2 : Big_int.t
+        }
+    | Unknown of Eval.t
+  [@@deriving sexp_of]
+
+  let sexp_of_t t =
+    match t with
+    | Accelerate _ | Detonate _ | Shoot _ -> sexp_of_t t
+    | Unknown eval -> [%sexp "Unknown", (Eval.to_string_mach eval : string)]
+  ;;
+
+  let of_eval eval =
+    (* ap ap cons 2 ap ap cons ap ap cons 40 14 ap ap cons 1 ap ap cons 0 ap ap cons 4 nil *)
+    match Eval.(tuple2 to_int_exn Vec2.of_eval eval) with
+    | cmd, vector when Big_int.equal cmd Big_int.zero -> Accelerate { vector }
+    | exception _ ->
+      (match
+         Eval.(tuple5 to_int_exn Vec2.of_eval to_int_exn to_int_exn to_int_exn eval)
+       with
+      | cmd, target, s0, s1, s2 when Big_int.equal cmd Big_int.two ->
+        Shoot { target; s0; s1; s2 }
+      | exception _ ->
+        (match Eval.(tuple3 to_int_exn to_int_exn to_int_exn eval) with
+        | cmd, d0, d1 when Big_int.equal cmd Big_int.one -> Detonate { d0; d1 }
+        | _ | (exception _) -> Unknown eval)
+      | _ -> Unknown eval)
+    | _ -> Unknown eval
+  ;;
+end
+
 module Game_info = struct
   type t =
     { stage : Stage.t
@@ -201,8 +242,8 @@ module Game_info = struct
     ; x4 : Eval.t
     ; tick : Big_int.t
     ; x1 : Eval.t
-    ; our_ship : (Ship.t * Eval.t list) option (* ship, commands *)
-    ; their_ship : (Ship.t * Eval.t list) option (* ship, commands *)
+    ; our_ship : (Ship.t * Ship_command.t list) option (* ship, commands *)
+    ; their_ship : (Ship.t * Ship_command.t list) option (* ship, commands *)
     }
   [@@deriving fields]
 
@@ -217,12 +258,8 @@ module Game_info = struct
         ; x3 : string = Eval.to_string_mach x3
         ; x4 : string = Eval.to_string_mach x4
         ; x1 : string = Eval.to_string_mach x1
-        ; our_ship : (Ship.t * string list) option =
-            Option.map our_ship ~f:(fun (ship, commands) ->
-                ship, List.map commands ~f:Eval.to_string_mach)
-        ; their_ship : (Ship.t * string list) option =
-            Option.map their_ship ~f:(fun (ship, commands) ->
-                ship, List.map commands ~f:Eval.to_string_mach)
+        ; our_ship : (Ship.t * Ship_command.t list) option
+        ; their_ship : (Ship.t * Ship_command.t list) option
         }]
   ;;
 
@@ -242,10 +279,15 @@ module Game_info = struct
       match ships with
       | [] -> None, None
       | [ _ ] -> failwith "one ship?!"
-      | [ ((ship1, _) as info1); info2 ] ->
+      | [ (ship1, commands1); (ship2, commands2) ] ->
+        let parse_commands commands = List.map commands ~f:Ship_command.of_eval in
+        let commands1 = parse_commands commands1 in
+        printf "Ship 1 commands: %d\n" (List.length commands1);
+        let commands2 = parse_commands commands2 in
+        printf "Ship 2 commands: %d\n" (List.length commands2);
         if Role.equal (Ship.role ship1) role
-        then Some info1, Some info2
-        else Some info2, Some info1
+        then Some (ship1, commands1), Some (ship2, commands2)
+        else Some (ship2, commands2), Some (ship1, commands1)
       | _ -> failwith "more than two ships?!"
     in
     { stage = Stage.of_eval stage
