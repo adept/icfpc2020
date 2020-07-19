@@ -138,8 +138,8 @@ module Ship = struct
   ;;
 
   let of_eval t =
-    printf !"SHIP: %{Eval#hum}\n" t;
-    List.iteri (Eval.decode_list t) ~f:(fun i t -> printf !"SHIP[%d]: %{Eval#hum}\n" i t);
+    (* printf !"SHIP: %{Eval#hum}\n" t; *)
+    (* List.iteri (Eval.decode_list t) ~f:(fun i t -> printf !"SHIP[%d]: %{Eval#hum}\n" i t); *)
     let role, id, pos, velocity, stats, x5, x6, x7 =
       Eval.(
         tuple8
@@ -193,11 +193,11 @@ module Game_info = struct
   ;;
 
   let of_eval stage info state =
-    printf !"INFO: %{Eval#hum}\n%!" info;
+    (* printf !"INFO: %{Eval#hum}\n%!" info; *)
     let max_ticks, role, x2, x3, x4 =
       Eval.(tuple5 to_int_exn Role.of_eval id id id info)
     in
-    printf !"STATE: %{Eval#hum}\n%!" state;
+    (* printf !"STATE: %{Eval#hum}\n%!" state; *)
     let tick, x1, ships =
       match Eval.decode_list state with
       | [] -> Big_int.zero, Eval.var "0", []
@@ -261,24 +261,20 @@ let shoot_cmd ~ship_id ~target ~x3 =
 (** Returns a unit vector pointing to the planet from [pos]. *)
 let gravity (x, y) =
   if y < 0 && Int.abs y >= Int.abs x
-  then (
-    (* Top quadrant *)
-    printf "QUADRANT: TOP\n%!";
-    0, 1)
+  then (* Top quadrant *)
+       (* printf "QUADRANT: TOP\n%!"; *)
+    0, 1
   else if y > 0 && Int.abs y >= Int.abs x
-  then (
-    (* Bottom quadrant *)
-    printf "QUADRANT: BOTTOM\n%!";
-    0, -1)
+  then (* Bottom quadrant *)
+       (* printf "QUADRANT: BOTTOM\n%!"; *)
+    0, -1
   else if x < 0 && Int.abs x >= Int.abs y
-  then (
-    (* Left quadrant *)
-    printf "QUADRANT: LEFT\n%!";
-    1, 0)
-  else (
-    (* Right quadrant *)
-    printf "QUADRANT: RIGHT\n%!";
-    -1, 0)
+  then (* Left quadrant *)
+       (* printf "QUADRANT: LEFT\n%!"; *)
+    1, 0
+  else (* Right quadrant *)
+       (* printf "QUADRANT: RIGHT\n%!"; *)
+    -1, 0
 ;;
 
 (* the planet is -16 to 16 *)
@@ -360,7 +356,7 @@ let commands ~server_url ~api_key player_key cmds =
   let response =
     Http.send_api_exn ~server_url ~api_key ~method_path:"aliens/send" commands_msg
   in
-  printf !"COMMANDS RESP: %{Encode#mach}\n" response;
+  (* printf !"COMMANDS RESP: %{Encode#mach}\n" response; *)
   let game_info = game_response (Encode.to_eval response) in
   printf !"GAME INFO: %{sexp: Game_info.t}\n" game_info;
   game_info
@@ -376,14 +372,69 @@ module Simulator = struct
       then (* We did not crash. *)
         None
       else (
-        let velocity = Vec2.add velocity pos in
-        let pos = Vec2.add velocity (gravity pos) in
+        let pos = Vec2.add velocity pos in
+        let velocity = Vec2.add velocity (gravity pos) in
         let ticks = ticks - 1 in
         if in_planet pos then Some (max_ticks - ticks) else loop ~pos ~velocity ~ticks)
     in
     loop ~pos ~velocity ~ticks:max_ticks
   ;;
 end
+
+let maybe_movement_command ~id ~pos ~velocity =
+  match Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:30 with
+  | None ->
+    (* We're not going to crash, so nothing to do. *)
+    None
+  | Some _ ->
+    (* We're falling into the planet!  Do something! *)
+    let gravity = gravity pos in
+    printf !"Gravity: (%d, %d)\n" (fst gravity) (snd gravity);
+    let sideways_dir =
+      if fst gravity <> 0
+      then (
+        print_endline "Sideways is Y";
+        `Y)
+      else (
+        print_endline "Sideways is X";
+        `X)
+    in
+    let sideways_velocity =
+      match sideways_dir with
+      | `X -> fst velocity
+      | `Y -> snd velocity
+    in
+    printf "Sideways velocity: %d\n" sideways_velocity;
+    let mk_sideways_vector sign =
+      match sideways_dir with
+      | `X -> sign, 0
+      | `Y -> 0, sign
+    in
+    let sideways_vector =
+      if sideways_velocity = 0
+      then
+        mk_sideways_vector
+          (match sideways_dir with
+          | `X -> ~-1 * sign (fst pos)
+          | `Y -> ~-1 * sign (snd pos))
+      else mk_sideways_vector (~-1 * sign sideways_velocity)
+    in
+    let vector =
+      match
+        Simulator.planet_crash_eta
+          ~pos
+          ~velocity:(Vec2.add velocity sideways_vector)
+          ~max_ticks:30
+      with
+      | None ->
+        (* We're good. *)
+        sideways_vector
+      | Some _ ->
+        print_endline "Still crashing, so adjusting trajectory harder";
+        Vec2.add sideways_vector gravity
+    in
+    Some (accelerate_cmd ~ship_id:id ~vector)
+;;
 
 let run ~server_url ~player_key ~api_key =
   printf "VERSION: %s\n\n" version;
@@ -408,9 +459,9 @@ let run ~server_url ~player_key ~api_key =
           | None ->
             (* No ship :,() *)
             []
-          | Some ({ id; pos; _ }, _) ->
+          | Some ({ id; pos; velocity; _ }, _) ->
             List.filter_opt
-              [ Some (accelerate_cmd ~ship_id:id ~vector:(gravity pos))
+              [ maybe_movement_command ~id ~pos ~velocity
               ; Option.map info.their_ship ~f:(fun (ship, _) ->
                     shoot_cmd
                       ~ship_id:id
