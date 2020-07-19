@@ -109,10 +109,22 @@ let tuple4 fa fb fc fd t =
   | x -> failwithf !"tuple4: %{sexp:t list}" x ()
 ;;
 
+let tuple5 fa fb fc fd fe t =
+  match decode_list t with
+  | [ a; b; c; d; e ] -> fa a, fb b, fc c, fd d, fe e
+  | x -> failwithf !"tuple5: %{sexp:t list}" x ()
+;;
+
+let rec encode_int_list x =
+  match x with
+  | [] -> var "nil"
+  | h :: t -> app (app (var "cons") (var (Int.to_string h))) (encode_int_list t)
+;;
+
 let rec encode_list x =
   match x with
   | [] -> var "nil"
-  | h :: t -> app (app (var "cons") (var (Int.to_string h))) (encode_list t)
+  | h :: t -> app (app (var "cons") h) (encode_list t)
 ;;
 
 let parse ws =
