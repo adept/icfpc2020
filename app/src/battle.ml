@@ -55,6 +55,12 @@ module Role = struct
   ;;
 end
 
+module Vec2 = struct
+  type t = Big_int.t * Big_int.t
+
+  let of_eval t = Eval.(tuple2 to_int_exn to_int_exn t)
+end
+
 module Game_info = struct
   type t =
     { stage : Stage.t
@@ -63,9 +69,9 @@ module Game_info = struct
     ; x2 : Eval.t
     ; x3 : Eval.t
     ; x4 : Eval.t
-    ; tick : Eval.t
+    ; tick : Big_int.t
     ; x1 : Eval.t
-    ; ships_commands : Eval.t
+    ; ships : (Eval.t * Eval.t list) list (* ship, commands *)
     }
   [@@deriving fields, sexp_of]
 
@@ -73,20 +79,21 @@ module Game_info = struct
     printf !"INFO: %{Eval#hum}\n%!" info;
     let x0, role, x2, x3, x4 = Eval.(tuple5 id id id id id info) in
     printf !"STATE: %{Eval#hum}\n%!" state;
-    let tick, x1, ships_commands =
+    let tick, x1, ships =
       match Eval.decode_list state with
-      | [] -> Eval.var "0", Eval.var "0", Eval.var "0"
-      | _ -> Eval.(tuple3 id id id state)
+      | [] -> Eval.var "0", Eval.var "0", []
+      | _ -> Eval.(tuple3 id id decode_list state)
     in
+    let ships = List.map ~f:Eval.(tuple2 id decode_list) ships in
     { stage = Stage.of_eval stage
     ; x0
     ; role = Role.of_eval role
     ; x2
     ; x3
     ; x4
-    ; tick
+    ; tick = Eval.to_int_exn tick
     ; x1
-    ; ships_commands
+    ; ships
     }
   ;;
 end
@@ -153,13 +160,19 @@ let commands ~server_url ~api_key player_key cmds =
 
 let run ~server_url ~player_key ~api_key =
   let player_key = maybe_create ~server_url ~api_key player_key in
-  let _info = join ~server_url ~api_key player_key in
-  let _info = start ~server_url ~api_key player_key in
-  let rec loop () =
-    let info = commands ~server_url ~api_key player_key [] in
-    match Game_info.stage info with
+  let info = join ~server_url ~api_key player_key in
+  match Game_info.stage info with
+  | Finished -> ()
+  | _ ->
+    let info = start ~server_url ~api_key player_key in
+    (match Game_info.stage info with
     | Finished -> ()
-    | _ -> loop ()
-  in
-  loop ()
+    | _ ->
+      let rec loop () =
+        let info = commands ~server_url ~api_key player_key [] in
+        match Game_info.stage info with
+        | Finished -> ()
+        | _ -> loop ()
+      in
+      loop ())
 ;;
