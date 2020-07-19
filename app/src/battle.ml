@@ -288,7 +288,10 @@ module Game_info = struct
         if Role.equal (Ship.role ship1) role
         then Some (ship1, commands1), Some (ship2, commands2)
         else Some (ship2, commands2), Some (ship1, commands1)
-      | _ -> failwith "more than two ships?!"
+      | s ->
+        List.iteri s ~f:(fun i (ship, _cmds) ->
+            printf !"Ship %d commands: %{sexp: Ship.t}\n%!" i ship);
+        failwith "more than two ships?!"
     in
     { stage = Stage.of_eval stage
     ; max_ticks
