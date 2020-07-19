@@ -77,9 +77,9 @@ module Ship = struct
     ; pos : Vec2.t
     ; velocity : Vec2.t
     ; x4 : Eval.t
-    ; x5 : Eval.t
-    ; x6 : Eval.t
-    ; x7 : Eval.t
+    ; x5 : Big_int.t
+    ; x6 : Big_int.t
+    ; x7 : Big_int.t
     }
   [@@deriving sexp_of, fields]
 
@@ -87,7 +87,17 @@ module Ship = struct
     printf !"SHIP: %{Eval#hum}\n" t;
     List.iteri (Eval.decode_list t) ~f:(fun i t -> printf !"SHIP[%d]: %{Eval#hum}\n" i t);
     let role, id, pos, velocity, x4, x5, x6, x7 =
-      Eval.(tuple8 Role.of_eval to_int_exn Vec2.of_eval Vec2.of_eval id id id id t)
+      Eval.(
+        tuple8
+          Role.of_eval
+          to_int_exn
+          Vec2.of_eval
+          Vec2.of_eval
+          id
+          to_int_exn
+          to_int_exn
+          to_int_exn
+          t)
     in
     { role; id; pos; velocity; x4; x5; x6; x7 }
   ;;
@@ -96,7 +106,7 @@ end
 module Game_info = struct
   type t =
     { stage : Stage.t
-    ; x0 : Eval.t
+    ; x0 : Big_int.t
     ; role : Role.t
     ; x2 : Eval.t
     ; x3 : Eval.t
@@ -110,7 +120,7 @@ module Game_info = struct
 
   let of_eval stage info state =
     printf !"INFO: %{Eval#hum}\n%!" info;
-    let x0, role, x2, x3, x4 = Eval.(tuple5 id Role.of_eval id id id info) in
+    let x0, role, x2, x3, x4 = Eval.(tuple5 to_int_exn Role.of_eval id id id info) in
     printf !"STATE: %{Eval#hum}\n%!" state;
     let tick, x1, ships =
       match Eval.decode_list state with
