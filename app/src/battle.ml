@@ -153,13 +153,19 @@ let commands ~server_url ~api_key player_key cmds =
 
 let run ~server_url ~player_key ~api_key =
   let player_key = maybe_create ~server_url ~api_key player_key in
-  let _info = join ~server_url ~api_key player_key in
-  let _info = start ~server_url ~api_key player_key in
-  let rec loop () =
-    let info = commands ~server_url ~api_key player_key [] in
-    match Game_info.stage info with
+  let info = join ~server_url ~api_key player_key in
+  match Game_info.stage info with
+  | Finished -> ()
+  | _ ->
+    let info = start ~server_url ~api_key player_key in
+    (match Game_info.stage info with
     | Finished -> ()
-    | _ -> loop ()
-  in
-  loop ()
+    | _ ->
+      let rec loop () =
+        let info = commands ~server_url ~api_key player_key [] in
+        match Game_info.stage info with
+        | Finished -> ()
+        | _ -> loop ()
+      in
+      loop ())
 ;;
