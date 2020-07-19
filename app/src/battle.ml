@@ -259,7 +259,7 @@ let shoot_cmd ~ship_id ~target ~x3 =
 ;;
 
 (** Returns a unit vector pointing to the planet from [pos]. *)
-let quadrants (x, y) =
+let gravity (x, y) =
   if y < 0 && Int.abs y >= Int.abs x
   then (
     (* Top quadrant *)
@@ -280,6 +280,33 @@ let quadrants (x, y) =
     printf "QUADRANT: RIGHT\n%!";
     -1, 0)
 ;;
+
+(* the planet is -16 to 16 *)
+(* let safety_margin = 4
+ * let will_hit_planet coord = coord >= -16 - safety_margin && coord >= 16 + safety_margin
+ * 
+ * let gravity_assist ~pos:(x, y) ~velocity (dx, dy) =
+ *   let open Big_int in
+ *   if y < zero && abs y >= abs x
+ *   then (
+ *     (\* Top quadrant *\)
+ *     printf "QUADRANT: TOP\n%!";
+ *     zero, one)
+ *   else if y > zero && abs y >= abs x
+ *   then (
+ *     (\* Bottom quadrant *\)
+ *     printf "QUADRANT: BOTTOM\n%!";
+ *     zero, minus_one)
+ *   else if x < zero && abs x >= abs y
+ *   then (
+ *     (\* Left quadrant *\)
+ *     printf "QUADRANT: LEFT\n%!";
+ *     one, zero)
+ *   else (
+ *     (\* Right quadrant *\)
+ *     printf "QUADRANT: RIGHT\n%!";
+ *     minus_one, zero)
+ * ;; *)
 
 let sign x = if x > 0 then 1 else if x < 0 then -1 else 0
 
@@ -362,13 +389,14 @@ let run ~server_url ~player_key ~api_key =
           | None ->
             (* No ship :,() *)
             []
-          | Some ({ id; pos; role; _ }, _) ->
+          | Some ({ id; pos; _ }, _) ->
             List.filter_opt
-              [ Some (accelerate_cmd ~ship_id:id ~vector:(quadrants pos))
+              [ Some (accelerate_cmd ~ship_id:id ~vector:(gravity pos))
               ; Option.map info.their_ship ~f:(fun (ship, _) ->
                     shoot_cmd
                       ~ship_id:id
-                      ~target:(Vec2.add ship.pos ship.velocity)
+                      ~target:
+                        (Vec2.add ship.pos (Vec2.add ship.velocity (gravity ship.pos)))
                       ~x3:Big_int.one)
               ]
         in
