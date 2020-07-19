@@ -18,9 +18,13 @@ val load_defs_exn : filename:string -> t String.Map.t
 val to_int_exn : t -> Big_int.t
 
 (** List-like access *)
-val car : t -> t
 
+val car : t -> t
 val cdr : t -> t
+val cons : t -> t -> t
+
+(** Coding *)
+
 val decode_vector : t -> (int * int) list list
 val encode_int_list : int list -> t
 val encode_list : t list -> t
