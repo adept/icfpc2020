@@ -15,6 +15,7 @@ val var : string -> t
 val to_string_hum : t -> string
 val to_string_mach : t -> string
 val load_defs_exn : filename:string -> t String.Map.t
+val to_int_exn : t -> Big_int.t
 
 (** List-like access *)
 val car : t -> t
