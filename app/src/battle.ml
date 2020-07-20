@@ -851,14 +851,19 @@ let run ~server_url ~player_key ~api_key =
               ; Option.bind
                   info.their_ship
                   ~f:(fun (ship, (their_commands : Ship_command.t list)) ->
-                    Some
-                      (shoot_cmd
-                         ~ship_id:id
-                         ~target:
-                           (Ship.next_pos_estimate
-                              ship
-                              ~acceleration:(get_acceleration their_commands))
-                         ~x3:(Big_int.of_int 30)))
+                    let attack_power = Big_int.of_int 64 in
+                    let max_overheat = Big_int.of_int 64 in
+                    if Big_int.( <= ) x5 (Big_int.( - ) max_overheat attack_power)
+                    then
+                      Some
+                        (shoot_cmd
+                           ~ship_id:id
+                           ~target:
+                             (Ship.next_pos_estimate
+                                ship
+                                ~acceleration:(get_acceleration their_commands))
+                           ~x3:attack_power)
+                    else None)
               ; (if Role.equal role Role.Defender
                     && Big_int.( > ) x5 Big_int.zero
                     && !decoys < 10
