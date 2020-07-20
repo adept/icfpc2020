@@ -1,6 +1,6 @@
 open Core
 
-let version = "0.104 DONT CRASH MULTI"
+let version = "0.105 WORKING GUNS"
 
 let maybe_create ~server_url ~api_key player_key =
   if String.equal player_key "ATTACK" || String.equal player_key "DEFEND"
@@ -90,12 +90,13 @@ module Ship_stats = struct
      - (254, 0, 16, 1) we have good fuel efficiency, but the cannons don't fire
      - (214, 10, 16, 1) good fuel efficiency and the cannons fire.
      - (140, 0, 24, 10) decoys loadout
+     - (86, 76, 10, 1) this is the guns configuration that Atelier used to blast us.
   *)
 
   let guns_enabled =
-    { fuel = Big_int_Z.big_int_of_int 214
-    ; guns = Big_int_Z.big_int_of_int 10
-    ; c = Big_int_Z.big_int_of_int 16
+    { fuel = Big_int_Z.big_int_of_int 86
+    ; guns = Big_int_Z.big_int_of_int 76
+    ; c = Big_int_Z.big_int_of_int 10
     ; d = Big_int_Z.big_int_of_int 1
     }
   ;;
@@ -417,7 +418,7 @@ let start ~server_url ~api_key ~player_key ~role =
                ; Ship_stats.(
                    to_eval
                      (match (role : Role.t) with
-                     | Attacker -> fuel_efficient (* guns_enabled *)
+                     | Attacker -> (* fuel_efficient *) guns_enabled
                      | Defender -> decoys_loadout (* fuel_efficient *)))
                ])))
   in
