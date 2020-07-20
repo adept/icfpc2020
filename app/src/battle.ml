@@ -89,6 +89,7 @@ module Ship_stats = struct
      - (255, 1, 1, 1) but we start to use lots of fuel after a few turns.
      - (254, 0, 16, 1) we have good fuel efficiency, but the cannons don't fire
      - (214, 10, 16, 1) good fuel efficiency and the cannons fire.
+     - (140, 0, 24, 10) decoys loadout
   *)
 
   let guns_enabled =
@@ -104,6 +105,14 @@ module Ship_stats = struct
     ; guns = Big_int_Z.big_int_of_int 0
     ; c = Big_int_Z.big_int_of_int 16
     ; d = Big_int_Z.big_int_of_int 1
+    }
+  ;;
+
+  let decoys_loadout =
+    { fuel = Big_int_Z.big_int_of_int 140
+    ; guns = Big_int_Z.big_int_of_int 0
+    ; c = Big_int_Z.big_int_of_int 24
+    ; d = Big_int_Z.big_int_of_int 10
     }
   ;;
 
@@ -353,6 +362,15 @@ let shoot_cmd ~ship_id ~target ~x3 =
     ]
 ;;
 
+let split_decoy_cmd ~ship_id =
+  let open Eval in
+  encode_list
+    [ var "3"
+    ; var (Big_int.to_string ship_id)
+    ; encode_list [ var "0"; var "0"; var "0"; var "1" ]
+    ]
+;;
+
 (* the planet is -16 to 16 *)
 let safety_margin = 4
 let will_hit_planet coord = coord >= -16 - safety_margin && coord >= 16 + safety_margin
@@ -400,7 +418,7 @@ let start ~server_url ~api_key ~player_key ~role =
                    to_eval
                      (match (role : Role.t) with
                      | Attacker -> fuel_efficient (* guns_enabled *)
-                     | Defender -> fuel_efficient))
+                     | Defender -> decoys_loadout (* fuel_efficient *)))
                ])))
   in
   let response =
@@ -758,6 +776,7 @@ let run ~server_url ~player_key ~api_key =
   printf "VERSION: %s\n\n" version;
   let player_key = maybe_create ~server_url ~api_key player_key in
   let info = join ~server_url ~api_key player_key in
+  let decoys = ref 0 in
   match Game_info.stage info with
   | Finished -> ()
   | _ ->
@@ -777,7 +796,7 @@ let run ~server_url ~player_key ~api_key =
           | None ->
             (* No ship :,() *)
             []
-          | Some ({ id; role; pos; velocity; _ }, _) ->
+          | Some ({ id; role; pos; velocity; x5; _ }, _) ->
             printf
               !"CRASH ETA: %{sexp: int option} ticks\n"
               (Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:256);
@@ -801,6 +820,14 @@ let run ~server_url ~player_key ~api_key =
                            ship
                            ~acceleration:(get_acceleration their_commands))
                       ~x3:Big_int.one)
+              ; (if Role.equal role Role.Defender
+                    && Big_int.( > ) x5 Big_int.zero
+                    && !decoys < 10
+                then (
+                  incr decoys;
+                  print_endline "Splitting decoy!\n";
+                  Some (split_decoy_cmd ~ship_id:id))
+                else None)
               ]
         in
         let info = commands ~server_url ~api_key player_key cmds in
