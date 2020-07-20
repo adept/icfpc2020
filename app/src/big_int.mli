@@ -14,6 +14,7 @@ val to_int_exn : t -> int
 
 (** Ops  *)
 
+val min : t -> t -> t
 val abs : t -> t
 val neg : t -> t
 val ( + ) : t -> t -> t

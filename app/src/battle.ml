@@ -850,19 +850,21 @@ let run ~server_url ~player_key ~api_key =
                 else maybe_detonate info.our_ship info.their_ship)
               ; Option.bind
                   info.their_ship
-                  ~f:(fun (ship, (their_commands : Ship_command.t list)) ->
-                    let attack_power = Big_int.of_int 64 in
+                  ~f:(fun (their_ship, (their_commands : Ship_command.t list)) ->
                     let max_overheat = Big_int.of_int 64 in
-                    if Big_int.( <= ) x5 (Big_int.( - ) max_overheat attack_power)
+                    let our_maximum_attack = Big_int.( - ) max_overheat x5 in
+                    if Big_int.( >= )
+                         (Big_int.( + ) their_ship.x5 our_maximum_attack)
+                         max_overheat
                     then
                       Some
                         (shoot_cmd
                            ~ship_id:id
                            ~target:
                              (Ship.next_pos_estimate
-                                ship
+                                their_ship
                                 ~acceleration:(get_acceleration their_commands))
-                           ~x3:attack_power)
+                           ~x3:our_maximum_attack)
                     else None)
               ; (if Role.equal role Role.Defender
                     && Big_int.( > ) x5 Big_int.zero
