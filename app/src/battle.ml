@@ -94,8 +94,8 @@ module Ship_stats = struct
   *)
 
   let guns_enabled =
-    { fuel = Big_int_Z.big_int_of_int 86
-    ; guns = Big_int_Z.big_int_of_int 76
+    { fuel = Big_int_Z.big_int_of_int 134
+    ; guns = Big_int_Z.big_int_of_int 64
     ; c = Big_int_Z.big_int_of_int 10
     ; d = Big_int_Z.big_int_of_int 1
     }
@@ -832,7 +832,7 @@ let run ~server_url ~player_key ~api_key =
           | None ->
             (* No ship :,() *)
             []
-          | Some ({ id; role; pos; velocity; x5; _ }, _) ->
+          | Some ({ id; role; pos; velocity; x5; stats = { guns = _; _ }; _ }, _) ->
             printf
               !"CRASH ETA: %{sexp: int option} ticks\n"
               (Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:256 ());
@@ -846,16 +846,17 @@ let run ~server_url ~player_key ~api_key =
                     (* dont detonate if they have split *)
                 then None
                 else maybe_detonate info.our_ship info.their_ship)
-              ; Option.map
+              ; Option.bind
                   info.their_ship
                   ~f:(fun (ship, (their_commands : Ship_command.t list)) ->
-                    shoot_cmd
-                      ~ship_id:id
-                      ~target:
-                        (Ship.next_pos_estimate
-                           ship
-                           ~acceleration:(get_acceleration their_commands))
-                      ~x3:Big_int.one)
+                    Some
+                      (shoot_cmd
+                         ~ship_id:id
+                         ~target:
+                           (Ship.next_pos_estimate
+                              ship
+                              ~acceleration:(get_acceleration their_commands))
+                         ~x3:(Big_int.of_int 30)))
               ; (if Role.equal role Role.Defender
                     && Big_int.( > ) x5 Big_int.zero
                     && !decoys < 10
