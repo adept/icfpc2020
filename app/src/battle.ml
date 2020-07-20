@@ -632,27 +632,29 @@ let avoid_planet_in_a_fuel_efficient_way ~pos ~velocity =
 
 let avoid_planet_in_agressive_way ~pos ~velocity =
   printf "EVASIVE ACTION!\n";
-  let velocity = Vec2.add velocity (gravity pos) in
-  let velocity_changes = [ -1, 0; 1, 0; 0, -1; 0, 1; 1, 1; -1, -1; 1, -1; -1, 1 ] in
-  let fuel_cost = [ 1; 1; 1; 1; 1; 1; 1; 1 ] in
-  let estimates =
-    List.zip_exn velocity_changes fuel_cost
-    |> List.map ~f:(fun (velocity_change, cost) ->
-           let velocity = Vec2.add velocity velocity_change in
-           let eta =
-             Simulator.planet_crash_eta ~pos ~velocity ~velocity_change ~max_ticks:256 ()
-             |> Option.value ~default:256
-           in
-           (eta, cost), velocity_change)
+  let gravity = gravity pos in
+  let velocity = Vec2.add velocity gravity in
+  (* dont go directly against gravity *)
+  let against_gravity = Vec2.sub (0, 0) gravity in
+  let velocity_changes =
+    [ -1, 0; 1, 0; 0, -1; 0, 1; 1, 1; -1, -1; 1, -1; -1, 1 ]
+    |> List.filter ~f:(fun c -> not (Vec2.equal against_gravity c))
   in
-  let (eta, cost), best_velocity_change =
-    List.max_elt estimates ~compare:(fun ((eta1, cost1), _) ((eta2, cost2), _) ->
-        let eta_cmp = compare eta1 eta2 in
-        if eta_cmp = 0 then compare cost2 cost1 else eta_cmp)
+  let estimates =
+    List.map velocity_changes ~f:(fun velocity_change ->
+        let velocity = Vec2.add velocity velocity_change in
+        let eta =
+          Simulator.planet_crash_eta ~pos ~velocity ~velocity_change ~max_ticks:256 ()
+          |> Option.value ~default:256
+        in
+        eta, velocity_change)
+  in
+  let eta, best_velocity_change =
+    List.max_elt estimates ~compare:(fun (eta1, _) (eta2, _) -> compare eta1 eta2)
     |> Option.value_exn
   in
   let vec = Vec2.sub (0, 0) best_velocity_change in
-  printf !"CHOSEN: ETA: %d, cost %d, vec: %{sexp:Vec2.t}\n" eta cost vec;
+  printf !"CHOSEN: ETA: %d, vec: %{sexp:Vec2.t}\n" eta vec;
   vec
 ;;
 
