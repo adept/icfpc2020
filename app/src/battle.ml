@@ -1,6 +1,6 @@
 open Core
 
-let version = "0.101 POWER STEERING"
+let version = "0.102 LEAD THE SHOTS"
 
 let maybe_create ~server_url ~api_key player_key =
   if String.equal player_key "ATTACK" || String.equal player_key "DEFEND"
@@ -156,7 +156,10 @@ module Ship = struct
   [@@deriving fields]
 
   let next_pos_estimate t ~acceleration =
-    t.pos |> Vec2.add t.velocity |> Vec2.add acceleration |> Vec2.add (gravity t.pos)
+    t.pos
+    |> Vec2.add t.velocity
+    |> Vec2.add (Vec2.neg acceleration)
+    |> Vec2.add (gravity t.pos)
   ;;
 
   let sexp_of_t { role; id; pos; velocity; stats; x5; x6; x7 } =
