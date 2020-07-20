@@ -803,6 +803,8 @@ let maybe_detonate our_ship their_ship =
             their_ship
             ~acceleration:(get_acceleration their_commands))
        <= 7
+       && Big_int.to_int_exn their_ship.stats.fuel <= 180
+       (* we seem to be causing approx 180 damage by blast *)
     then Some (detonate_cmd ~ship_id:our_ship.id)
     else None
   | _ -> None
