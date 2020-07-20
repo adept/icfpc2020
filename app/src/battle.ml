@@ -247,12 +247,15 @@ module Game_info = struct
     ; x4 : Eval.t
     ; tick : Big_int.t
     ; x1 : Eval.t
+    ; num_ships : int
     ; our_ship : (Ship.t * Ship_command.t list) option (* ship, commands *)
     ; their_ship : (Ship.t * Ship_command.t list) option (* ship, commands *)
     }
   [@@deriving fields]
 
-  let sexp_of_t { stage; max_ticks; role; x2; x3; x4; tick; x1; our_ship; their_ship } =
+  let sexp_of_t
+      { stage; max_ticks; role; x2; x3; x4; tick; x1; num_ships; our_ship; their_ship }
+    =
     [%sexp
       "Game_info"
       , { stage : Stage.t
@@ -263,6 +266,7 @@ module Game_info = struct
         ; x3 : string = Eval.to_string_mach x3
         ; x4 : string = Eval.to_string_mach x4
         ; x1 : string = Eval.to_string_mach x1
+        ; num_ships : int
         ; our_ship : (Ship.t * Ship_command.t list) option
         ; their_ship : (Ship.t * Ship_command.t list) option
         }]
@@ -280,6 +284,7 @@ module Game_info = struct
       | _ -> Eval.(tuple3 to_int_exn id decode_list state)
     in
     let ships = List.map ~f:Eval.(tuple2 Ship.of_eval decode_list) ships in
+    let num_ships = List.length ships in
     let our_ship, their_ship =
       match ships with
       | [] -> None, None
@@ -311,6 +316,7 @@ module Game_info = struct
     ; x4
     ; tick
     ; x1
+    ; num_ships
     ; our_ship
     ; their_ship
     }
@@ -777,7 +783,8 @@ let run ~server_url ~player_key ~api_key =
                   (accelerate_cmd
                      ~ship_id:id
                      ~vector:(steering info.our_ship info.their_ship))
-              ; (if Role.equal role Role.Defender
+              ; (if Role.equal role Role.Defender || info.num_ships > 2
+                    (* dont detonate if they have split *)
                 then None
                 else maybe_detonate info.our_ship info.their_ship)
               ; Option.map
