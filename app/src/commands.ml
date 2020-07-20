@@ -35,6 +35,17 @@ let commands =
                then print_endline (Encode.to_string_mach result)
                else print_s (Encode.sexp_of_t result);
                printf "Leftover: '%s'\n" leftover) )
+    ; ( "game-response"
+      , Command.basic
+          ~summary:"Decode the game response"
+          (let%map_open str = anon ("STR" %: string) in
+           fun () ->
+             match Encode.decode str with
+             | Error err -> eprintf "Error: %s" (Error.to_string_hum err)
+             | Ok (result, _leftover) ->
+               printf
+                 !"%{sexp:Battle.Game_info.t}\n"
+                 (Battle.game_response (Encode.to_eval result))) )
     ; ( "parse"
       , Command.basic
           ~summary:"Parse a file of definition like galaxy.txt"
