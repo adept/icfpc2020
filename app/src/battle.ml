@@ -1,6 +1,6 @@
 open Core
 
-let version = "0.107 100s OF US"
+let version = "0.108 NO WIGGLE"
 
 let maybe_create ~server_url ~api_key player_key =
   if String.equal player_key "ATTACK" || String.equal player_key "DEFEND"
@@ -652,9 +652,12 @@ let avoid_planet_in_a_fuel_efficient_way ~pos ~velocity =
 let avoid_planet_in_agressive_way ~pos ~velocity =
   printf "EVASIVE ACTION!\n";
   let gravity = gravity pos in
+  let against_gravity =
+    (* If we're stationary, don't go directly against gravity. If we're moving,
+       we can go against gravity. *)
+    if Vec2.equal (0, 0) velocity then Vec2.sub (0, 0) gravity else 0, 0
+  in
   let velocity = Vec2.add velocity gravity in
-  (* dont go directly against gravity *)
-  let against_gravity = Vec2.sub (0, 0) gravity in
   let velocity_changes =
     [ -1, 0; 1, 0; 0, -1; 0, 1; 1, 1; -1, -1; 1, -1; -1, 1 ]
     |> List.filter ~f:(fun c -> not (Vec2.equal against_gravity c))
