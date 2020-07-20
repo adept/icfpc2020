@@ -1,6 +1,6 @@
 open Core
 
-let version = "0.102 LEAD THE SHOTS"
+let version = "0.103 FALL A BIT"
 
 let maybe_create ~server_url ~api_key player_key =
   if String.equal player_key "ATTACK" || String.equal player_key "DEFEND"
