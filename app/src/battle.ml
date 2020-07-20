@@ -284,8 +284,17 @@ module Game_info = struct
       match ships with
       | [] -> None, None
       | [ _ ] -> failwith "one ship?!"
-      | [ (ship1, commands1); (ship2, commands2) ] ->
+      | (ship1, commands1) :: (ship2, commands2) :: rest ->
         let parse_commands commands = List.map commands ~f:Ship_command.of_eval in
+        if not (List.is_empty rest)
+        then (
+          printf "more than two ships?!\n";
+          List.iteri ships ~f:(fun i (ship, cmds) ->
+              printf !"Ship %d: %{sexp: Ship.t}\n%!" i ship;
+              printf
+                !"Ship %d commands: %{sexp: Ship_command.t list}\n%!"
+                i
+                (parse_commands cmds)));
         let commands1 = parse_commands commands1 in
         printf "Ship 1 commands: %d\n" (List.length commands1);
         let commands2 = parse_commands commands2 in
@@ -293,10 +302,6 @@ module Game_info = struct
         if Role.equal (Ship.role ship1) role
         then Some (ship1, commands1), Some (ship2, commands2)
         else Some (ship2, commands2), Some (ship1, commands1)
-      | s ->
-        List.iteri s ~f:(fun i (ship, _cmds) ->
-            printf !"Ship %d commands: %{sexp: Ship.t}\n%!" i ship);
-        failwith "more than two ships?!"
     in
     { stage = Stage.of_eval stage
     ; max_ticks
