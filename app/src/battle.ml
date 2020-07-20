@@ -524,7 +524,7 @@ module Simulator = struct
   (* let in_planet (x, y) = -16 <= x && x <= 16 && -16 <= y && y <= 16 *)
 
   (* How many ticks until we crash into the planet?  May return None. *)
-  let planet_crash_eta ~pos ~velocity ~max_ticks =
+  let planet_crash_eta ?velocity_change ~pos ~velocity ~max_ticks () =
     let rec loop ~pos ~velocity ~ticks =
       if ticks = 0
       then (* We did not crash. *)
@@ -532,6 +532,11 @@ module Simulator = struct
       else (
         let new_pos = Vec2.add velocity pos in
         let velocity = Vec2.add velocity (gravity pos) in
+        let velocity =
+          match velocity_change with
+          | None -> velocity
+          | Some change -> Vec2.add velocity change
+        in
         let ticks = ticks - 1 in
         if intersects_planet pos new_pos || out_of_bounds pos new_pos
         then Some (max_ticks - ticks)
@@ -542,7 +547,7 @@ module Simulator = struct
 end
 
 let maybe_movement_command ~id ~pos ~velocity =
-  match Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:30 with
+  match Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:30 () with
   | None ->
     (* We're not going to crash, so nothing to do. *)
     None
@@ -581,6 +586,7 @@ let maybe_movement_command ~id ~pos ~velocity =
           ~pos
           ~velocity:(Vec2.add velocity sideways_vector)
           ~max_ticks:30
+          ()
       with
       | None ->
         (* We're good. *)
@@ -608,7 +614,7 @@ let avoid_planet_in_a_fuel_efficient_way ~pos ~velocity =
       |> List.map ~f:(fun (velocity_change, cost) ->
              let velocity = Vec2.add velocity velocity_change in
              let eta =
-               Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:256
+               Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:256 ()
                |> Option.value ~default:256
              in
              (eta, cost), velocity_change)
@@ -622,6 +628,32 @@ let avoid_planet_in_a_fuel_efficient_way ~pos ~velocity =
     let vec = Vec2.sub (0, 0) best_velocity_change in
     printf !"CHOSEN: ETA: %d, cost %d, vec: %{sexp:Vec2.t}\n" eta cost vec;
     vec)
+;;
+
+let avoid_planet_in_agressive_way ~pos ~velocity =
+  printf "EVASIVE ACTION!\n";
+  let velocity = Vec2.add velocity (gravity pos) in
+  let velocity_changes = [ -1, 0; 1, 0; 0, -1; 0, 1; 1, 1; -1, -1; 1, -1; -1, 1 ] in
+  let fuel_cost = [ 1; 1; 1; 1; 1; 1; 1; 1 ] in
+  let estimates =
+    List.zip_exn velocity_changes fuel_cost
+    |> List.map ~f:(fun (velocity_change, cost) ->
+           let velocity = Vec2.add velocity velocity_change in
+           let eta =
+             Simulator.planet_crash_eta ~pos ~velocity ~velocity_change ~max_ticks:256 ()
+             |> Option.value ~default:256
+           in
+           (eta, cost), velocity_change)
+  in
+  let (eta, cost), best_velocity_change =
+    List.max_elt estimates ~compare:(fun ((eta1, cost1), _) ((eta2, cost2), _) ->
+        let eta_cmp = compare eta1 eta2 in
+        if eta_cmp = 0 then compare cost2 cost1 else eta_cmp)
+    |> Option.value_exn
+  in
+  let vec = Vec2.sub (0, 0) best_velocity_change in
+  printf !"CHOSEN: ETA: %d, cost %d, vec: %{sexp:Vec2.t}\n" eta cost vec;
+  vec
 ;;
 
 let get_acceleration (commands : Ship_command.t list) =
@@ -645,11 +677,11 @@ let steering our_ship their_ship =
         ~pos:our_ship.pos
         ~velocity:our_ship.velocity
         ~max_ticks:256
+        ()
       |> Option.value ~default:256
     in
     if eta <= evasive_action_limit
-    then
-      avoid_planet_in_a_fuel_efficient_way ~pos:our_ship.pos ~velocity:our_ship.velocity
+    then avoid_planet_in_agressive_way ~pos:our_ship.pos ~velocity:our_ship.velocity
     else (
       let velocity_changes =
         [ 0, 0; -1, 0; 1, 0; 0, -1; 0, 1; 1, 1; -1, -1; 1, -1; -1, 1 ]
@@ -673,6 +705,7 @@ let steering our_ship their_ship =
                    ~pos:our_ship.pos
                    ~velocity:our_ship.velocity
                    ~max_ticks:256
+                   ()
                  |> Option.value ~default:256
                in
                if eta <= evasive_action_limit
@@ -780,7 +813,7 @@ let run ~server_url ~player_key ~api_key =
           | Some ({ id; role; pos; velocity; _ }, _) ->
             printf
               !"CRASH ETA: %{sexp: int option} ticks\n"
-              (Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:256);
+              (Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:256 ());
             List.filter_opt
               [ (* maybe_movement_command ~id ~pos ~velocity *)
                 Some
