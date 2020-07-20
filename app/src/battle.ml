@@ -499,11 +499,13 @@ module Simulator = struct
          (planet_boundary, planet_boundary)
   ;;
 
+  let bounds = 130
+
   let out_of_bounds a b =
-    segments_intersect a b (160, -160) (160, 160)
-    || segments_intersect a b (-160, -160) (-160, 160)
-    || segments_intersect a b (-160, -160) (160, -160)
-    || segments_intersect a b (-160, 160) (160, 160)
+    segments_intersect a b (bounds, -bounds) (bounds, bounds)
+    || segments_intersect a b (-bounds, -bounds) (-bounds, bounds)
+    || segments_intersect a b (-bounds, -bounds) (bounds, -bounds)
+    || segments_intersect a b (-bounds, bounds) (bounds, bounds)
   ;;
 
   let%expect_test _ =
@@ -531,7 +533,7 @@ module Simulator = struct
         let new_pos = Vec2.add velocity pos in
         let velocity = Vec2.add velocity (gravity pos) in
         let ticks = ticks - 1 in
-        if intersects_planet pos new_pos (* || out_of_bounds pos new_pos *)
+        if intersects_planet pos new_pos || out_of_bounds pos new_pos
         then Some (max_ticks - ticks)
         else loop ~pos:new_pos ~velocity ~ticks)
     in
@@ -592,7 +594,9 @@ let maybe_movement_command ~id ~pos ~velocity =
 
 let avoid_planet_in_a_fuel_efficient_way ~pos ~velocity =
   if Vec2.equal velocity (0, 0)
-  then 0, 0 (* fall a bit *)
+  then (
+    let x, y = gravity pos in
+    y, x (* move sideways a bit *))
   else (
     let velocity = Vec2.add velocity (gravity pos) in
     let velocity_changes =
