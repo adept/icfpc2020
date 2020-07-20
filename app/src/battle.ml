@@ -156,7 +156,10 @@ module Ship = struct
   [@@deriving fields]
 
   let next_pos_estimate t ~acceleration =
-    t.pos |> Vec2.add t.velocity |> Vec2.add acceleration |> Vec2.add (gravity t.pos)
+    t.pos
+    |> Vec2.add t.velocity
+    |> Vec2.add (Vec2.neg acceleration)
+    |> Vec2.add (gravity t.pos)
   ;;
 
   let sexp_of_t { role; id; pos; velocity; stats; x5; x6; x7 } =
