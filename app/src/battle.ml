@@ -91,7 +91,7 @@ module Ship_stats = struct
      - (214, 10, 16, 1) good fuel efficiency and the cannons fire.
   *)
 
-  let attacker_stats =
+  let guns_enabled =
     { fuel = Big_int_Z.big_int_of_int 214
     ; guns = Big_int_Z.big_int_of_int 10
     ; c = Big_int_Z.big_int_of_int 16
@@ -99,7 +99,7 @@ module Ship_stats = struct
     }
   ;;
 
-  let defender_stats =
+  let fuel_efficient =
     { fuel = Big_int_Z.big_int_of_int 254
     ; guns = Big_int_Z.big_int_of_int 0
     ; c = Big_int_Z.big_int_of_int 16
@@ -393,8 +393,8 @@ let start ~server_url ~api_key ~player_key ~role =
                ; Ship_stats.(
                    to_eval
                      (match (role : Role.t) with
-                     | Attacker -> attacker_stats
-                     | Defender -> defender_stats))
+                     | Attacker -> fuel_efficient (* guns_enabled *)
+                     | Defender -> fuel_efficient))
                ])))
   in
   let response =
