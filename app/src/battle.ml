@@ -866,7 +866,11 @@ let run ~server_url ~player_key ~api_key =
                            ~x3:our_maximum_attack)
                     else None)
               ; (if Role.equal role Role.Defender
-                    && (Big_int.( > ) x5 Big_int.zero || Option.is_none crash_eta)
+                    && (Big_int.( > ) x5 Big_int.zero
+                       ||
+                       match crash_eta with
+                       | (None | Some x) when x >= 50 -> true
+                       | _ -> false)
                     && !decoys < 100
                 then (
                   incr decoys;
