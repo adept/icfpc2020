@@ -1,6 +1,6 @@
 open Core
 
-let version = "0.106 NO OVERHEAT"
+let version = "0.107 100s OF US"
 
 let maybe_create ~server_url ~api_key player_key =
   if String.equal player_key "ATTACK" || String.equal player_key "DEFEND"
@@ -869,7 +869,8 @@ let run ~server_url ~player_key ~api_key =
                     && (Big_int.( > ) x5 Big_int.zero
                        ||
                        match crash_eta with
-                       | (None | Some x) when x >= 50 -> true
+                       | None -> true
+                       | Some x when x >= 50 -> true
                        | _ -> false)
                     && !decoys < 100
                 then (
