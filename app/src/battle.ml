@@ -1,6 +1,16 @@
 open Core
 
-let version = "0.108 NO WIGGLE"
+let version = "0.109 THE LIMIT IS 100"
+
+(* Game tick constants *)
+
+let max_game_ticks = 384
+
+let simulator_game_ticks =
+  (* The simulator gets less accurate the further into the future we look. Kind
+     of like weather predictions. *)
+  100
+;;
 
 let maybe_create ~server_url ~api_key player_key =
   if String.equal player_key "ATTACK" || String.equal player_key "DEFEND"
@@ -633,8 +643,8 @@ let avoid_planet_in_a_fuel_efficient_way ~pos ~velocity =
       |> List.map ~f:(fun (velocity_change, cost) ->
              let velocity = Vec2.add velocity velocity_change in
              let eta =
-               Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:256 ()
-               |> Option.value ~default:256
+               Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:100 ()
+               |> Option.value ~default:100
              in
              (eta, cost), velocity_change)
     in
@@ -666,8 +676,13 @@ let avoid_planet_in_agressive_way ~pos ~velocity =
     List.map velocity_changes ~f:(fun velocity_change ->
         let velocity = Vec2.add velocity velocity_change in
         let eta =
-          Simulator.planet_crash_eta ~pos ~velocity ~velocity_change ~max_ticks:256 ()
-          |> Option.value ~default:256
+          Simulator.planet_crash_eta
+            ~pos
+            ~velocity
+            ~velocity_change
+            ~max_ticks:simulator_game_ticks
+            ()
+          |> Option.value ~default:simulator_game_ticks
         in
         eta, velocity_change)
   in
@@ -700,9 +715,9 @@ let steering our_ship their_ship =
       Simulator.planet_crash_eta
         ~pos:our_ship.pos
         ~velocity:our_ship.velocity
-        ~max_ticks:256
+        ~max_ticks:simulator_game_ticks
         ()
-      |> Option.value ~default:256
+      |> Option.value ~default:simulator_game_ticks
     in
     if eta <= evasive_action_limit
     then avoid_planet_in_agressive_way ~pos:our_ship.pos ~velocity:our_ship.velocity
@@ -728,9 +743,9 @@ let steering our_ship their_ship =
                  Simulator.planet_crash_eta
                    ~pos:our_ship.pos
                    ~velocity:our_ship.velocity
-                   ~max_ticks:256
+                   ~max_ticks:simulator_game_ticks
                    ()
-                 |> Option.value ~default:256
+                 |> Option.value ~default:simulator_game_ticks
                in
                if eta <= evasive_action_limit
                then None
@@ -838,7 +853,9 @@ let run ~server_url ~player_key ~api_key =
             (* No ship :,() *)
             []
           | Some ({ id; role; pos; velocity; x5; stats = { guns = _; _ }; _ }, _) ->
-            let crash_eta = Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:256 () in
+            let crash_eta =
+              Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:simulator_game_ticks ()
+            in
             printf !"CRASH ETA: %{sexp: int option} ticks\n" crash_eta;
             List.filter_opt
               [ (* maybe_movement_command ~id ~pos ~velocity *)
