@@ -110,10 +110,10 @@ module Ship_stats = struct
   ;;
 
   let decoys_loadout =
-    { fuel = Big_int_Z.big_int_of_int 140
+    { fuel = Big_int_Z.big_int_of_int 152
     ; guns = Big_int_Z.big_int_of_int 0
-    ; c = Big_int_Z.big_int_of_int 24
-    ; d = Big_int_Z.big_int_of_int 10
+    ; c = Big_int_Z.big_int_of_int 8
+    ; d = Big_int_Z.big_int_of_int 100
     }
   ;;
 
@@ -835,9 +835,8 @@ let run ~server_url ~player_key ~api_key =
             (* No ship :,() *)
             []
           | Some ({ id; role; pos; velocity; x5; stats = { guns = _; _ }; _ }, _) ->
-            printf
-              !"CRASH ETA: %{sexp: int option} ticks\n"
-              (Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:256 ());
+            let crash_eta = Simulator.planet_crash_eta ~pos ~velocity ~max_ticks:256 () in
+            printf !"CRASH ETA: %{sexp: int option} ticks\n" crash_eta;
             List.filter_opt
               [ (* maybe_movement_command ~id ~pos ~velocity *)
                 Some
@@ -867,8 +866,8 @@ let run ~server_url ~player_key ~api_key =
                            ~x3:our_maximum_attack)
                     else None)
               ; (if Role.equal role Role.Defender
-                    && Big_int.( > ) x5 Big_int.zero
-                    && !decoys < 10
+                    && (Big_int.( > ) x5 Big_int.zero || Option.is_none crash_eta)
+                    && !decoys < 100
                 then (
                   incr decoys;
                   print_endline "Splitting decoy!\n";
